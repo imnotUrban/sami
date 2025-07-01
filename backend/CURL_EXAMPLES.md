@@ -322,50 +322,7 @@ curl -X DELETE "$API_URL/comments/1" \
   -H "Authorization: Bearer $JWT_TOKEN"
 ```
 
-## 7. Snapshots (Diagram Versions)
-
-### List Project Snapshots
-```bash
-curl -X GET "$API_URL/projects/1/snapshots" \
-  -H "Authorization: Bearer $JWT_TOKEN"
-```
-
-### Create Project Snapshot
-```bash
-curl -X POST "$API_URL/projects/1/snapshots" \
-  -H "Authorization: Bearer $JWT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "notes": "Manual snapshot before major changes"
-  }'
-```
-
-### Get Specific Snapshot
-```bash
-curl -X GET "$API_URL/snapshots/1" \
-  -H "Authorization: Bearer $JWT_TOKEN"
-```
-
-### Restore Project to Snapshot
-```bash
-# Restore with automatic backup
-curl -X POST "$API_URL/snapshots/1/restore" \
-  -H "Authorization: Bearer $JWT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "force": false
-  }'
-
-# Force restore without backup
-curl -X POST "$API_URL/snapshots/1/restore" \
-  -H "Authorization: Bearer $JWT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "force": true
-  }'
-```
-
-## 8. Project History
+## 7. Project History
 
 ### List Project History
 ```bash
@@ -382,7 +339,7 @@ curl -X GET "$API_URL/projects/1/history?action=create_service" \
   -H "Authorization: Bearer $JWT_TOKEN"
 ```
 
-## 9. Admin Endpoints
+## 8. Admin Endpoints
 
 ### List All Users (Admin Only)
 ```bash
@@ -405,6 +362,43 @@ curl -X GET "$API_URL/admin/users?role=admin" \
 # Search users by name or email
 curl -X GET "$API_URL/admin/users?search=john" \
   -H "Authorization: Bearer $JWT_TOKEN"
+```
+
+### Invite New User (Admin Only)
+```bash
+# Invite a regular user
+curl -X POST "$API_URL/admin/users/invite" \
+  -H "Authorization: Bearer $JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Juan Pérez",
+    "email": "juan@ejemplo.com",
+    "role": "user"
+  }'
+
+# Invite an admin user
+curl -X POST "$API_URL/admin/users/invite" \
+  -H "Authorization: Bearer $JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "María González",
+    "email": "maria@ejemplo.com",
+    "role": "admin"
+  }'
+
+# Response includes generated password:
+# {
+#   "message": "User invited successfully",
+#   "user": {
+#     "id": 10,
+#     "name": "Juan Pérez",
+#     "email": "juan@ejemplo.com",
+#     "role": "user",
+#     "status": "active",
+#     "created_at": "2023-01-01T00:00:00Z"
+#   },
+#   "password": "randomPassword123"
+# }
 ```
 
 ### Get User Statistics (Admin Only)
@@ -448,14 +442,14 @@ curl -X DELETE "$API_URL/admin/users/1" \
   -H "Authorization: Bearer $JWT_TOKEN"
 ```
 
-## 10. Health Check
+## 9. Health Check
 
 ### Verificar Estado del Servidor
 ```bash
 curl -X GET "$API_URL/health"
 ```
 
-## 11. Ejemplos de Pruebas Completas
+## 10. Ejemplos de Pruebas Completas
 
 ### Script de Prueba Completo
 ```bash
@@ -534,37 +528,13 @@ curl -s -X GET "$API_URL/projects/$PROJECT_ID/collaborators" \
   -H "Authorization: Bearer $JWT_TOKEN" | jq
 echo -e "\n"
 
-echo "=== 9. Crear Snapshot ==="
-SNAPSHOT_RESPONSE=$(curl -s -X POST "$API_URL/projects/$PROJECT_ID/snapshots" \
-  -H "Authorization: Bearer $JWT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "notes": "Initial project snapshot for testing"
-  }')
-echo $SNAPSHOT_RESPONSE
-
-# Extraer snapshot_id
-SNAPSHOT_ID=$(echo $SNAPSHOT_RESPONSE | jq -r '.snapshot.id')
-echo "Snapshot ID: $SNAPSHOT_ID"
-echo -e "\n"
-
-echo "=== 10. Listar Snapshots ==="
-curl -s -X GET "$API_URL/projects/$PROJECT_ID/snapshots" \
-  -H "Authorization: Bearer $JWT_TOKEN" | jq
-echo -e "\n"
-
-echo "=== 11. Obtener Snapshot Específico ==="
-curl -s -X GET "$API_URL/snapshots/$SNAPSHOT_ID" \
-  -H "Authorization: Bearer $JWT_TOKEN" | jq
-echo -e "\n"
-
-echo "=== 12. Ver Historial del Proyecto ==="
+echo "=== 9. Ver Historial del Proyecto ==="
 curl -s -X GET "$API_URL/projects/$PROJECT_ID/history?limit=10" \
   -H "Authorization: Bearer $JWT_TOKEN" | jq
 echo -e "\n"
 ```
 
-## 12. Casos de Error
+## 11. Casos de Error
 
 ### Acceso sin Token
 ```bash
@@ -611,20 +581,6 @@ curl -X POST "$API_URL/projects" \
 # Respuesta: {"error":"Invalid data","details":"..."}
 ```
 
-### Snapshot No Encontrado
-```bash
-curl -X GET "$API_URL/snapshots/999" \
-  -H "Authorization: Bearer $JWT_TOKEN"
-# Respuesta: {"error":"Snapshot not found"}
-```
-
-### Restaurar sin Permisos de Escritura
-```bash
-curl -X POST "$API_URL/snapshots/1/restore" \
-  -H "Authorization: Bearer $JWT_TOKEN"
-# Respuesta: {"error":"Write access required"}
-```
-
 ### Acceso Admin sin Permisos
 ```bash
 curl -X GET "$API_URL/admin/users" \
@@ -639,7 +595,7 @@ curl -X GET "$API_URL/projects/999/history" \
 # Respuesta: {"error":"Project not found"}
 ```
 
-## 13. Tips para Testing
+## 12. Tips para Testing
 
 ### Usar jq para Formatear JSON
 ```bash

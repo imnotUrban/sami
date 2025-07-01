@@ -1,8 +1,11 @@
 package controller
 
 import (
+	"crypto/rand"
+	"math/big"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -458,5 +461,130 @@ func (ac *AdminController) DeleteUser(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "User deleted successfully",
+	})
+}
+
+// generateRandomPassword generates a random password with specified length
+func generateRandomPassword(length int) (string, error) {
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+	password := make([]byte, length)
+	for i := range password {
+		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
+		if err != nil {
+			return "", err
+		}
+		password[i] = charset[num.Int64()]
+	}
+
+	return string(password), nil
+}
+
+// InviteUser creates a new user with a random password (admin only)
+func (ac *AdminController) InviteUser(c *gin.Context) {
+	// Get authenticated user
+	userInterface, exists := c.Get("user")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "User not authenticated",
+		})
+		return
+	}
+
+	authUser, ok := userInterface.(*models.User)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Internal server error",
+		})
+		return
+	}
+
+	// Check if user is admin
+	if authUser.Role != "admin" {
+		c.JSON(http.StatusForbidden, gin.H{
+			"error": "Admin access required",
+		})
+		return
+	}
+
+	// Parse request body
+	var inviteData struct {
+		Name  string `json:"name" binding:"required"`
+		Email string `json:"email" binding:"required,email"`
+		Role  string `json:"role,omitempty"`
+	}
+
+	if err := c.ShouldBindJSON(&inviteData); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Invalid request data",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	// Validate email format and normalize
+	inviteData.Email = strings.ToLower(strings.TrimSpace(inviteData.Email))
+	inviteData.Name = strings.TrimSpace(inviteData.Name)
+
+	// Check if user already exists
+	var existingUser models.User
+	if err := ac.DB.Where("email = ?", inviteData.Email).First(&existingUser).Error; err == nil {
+		c.JSON(http.StatusConflict, gin.H{
+			"error": "User already exists with this email",
+		})
+		return
+	}
+
+	// Set default role if not provided
+	if inviteData.Role == "" {
+		inviteData.Role = "user"
+	}
+
+	// Validate role
+	if inviteData.Role != "user" && inviteData.Role != "admin" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid role. Must be 'user' or 'admin'",
+		})
+		return
+	}
+
+	// Generate random password (12 characters)
+	randomPassword, err := generateRandomPassword(12)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to generate password",
+		})
+		return
+	}
+
+	// Create new user
+	newUser := models.User{
+		Name:   inviteData.Name,
+		Email:  inviteData.Email,
+		Role:   inviteData.Role,
+		Status: "active",
+	}
+
+	// Set hashed password
+	if err := newUser.SetPassword(randomPassword); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to process password",
+		})
+		return
+	}
+
+	// Save to database
+	if err := ac.DB.Create(&newUser).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to create user",
+		})
+		return
+	}
+
+	// Return success response with generated password
+	c.JSON(http.StatusCreated, gin.H{
+		"message":  "User invited successfully",
+		"user":     newUser.ToResponse(),
+		"password": randomPassword, // Return password for admin to share
 	})
 }

@@ -20,6 +20,7 @@ func SetupCommentRoutes(r *gin.Engine, commentController *controller.CommentCont
 	comments := r.Group("/comments")
 	comments.Use(authController.AuthMiddleware())
 	{
+		comments.GET("", commentController.GetAllUserComments)   // GET /comments (all user accessible comments)
 		comments.GET("/:id", commentController.GetComment)       // GET /comments/:id
 		comments.PUT("/:id", commentController.UpdateComment)    // PUT /comments/:id
 		comments.DELETE("/:id", commentController.DeleteComment) // DELETE /comments/:id

@@ -167,6 +167,135 @@ func (ac *AuthController) Logout(c *gin.Context) {
 	})
 }
 
+// UpdateProfile updates authenticated user's profile information
+func (ac *AuthController) UpdateProfile(c *gin.Context) {
+	// Get user from context (set by middleware)
+	userInterface, exists := c.Get("user")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "User not authenticated",
+		})
+		return
+	}
+
+	user, ok := userInterface.(*models.User)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Internal server error",
+		})
+		return
+	}
+
+	var req models.UpdateProfileRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Invalid data",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	// Check if email is being changed and if it's already in use
+	if req.Email != user.Email {
+		var existingUser models.User
+		if err := ac.DB.Where("email = ? AND id != ?", req.Email, user.ID).First(&existingUser).Error; err == nil {
+			c.JSON(http.StatusConflict, gin.H{
+				"error": "Email already in use by another user",
+			})
+			return
+		}
+	}
+
+	// Update user fields
+	if req.Name != "" {
+		user.Name = req.Name
+	}
+	if req.Email != "" {
+		user.Email = req.Email
+	}
+	if req.Phone != "" {
+		user.Phone = &req.Phone
+	}
+
+	// Save updated user
+	if err := ac.DB.Save(user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to update profile",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Profile updated successfully",
+		"user":    user.ToResponse(),
+	})
+}
+
+// ChangePassword changes the authenticated user's password
+func (ac *AuthController) ChangePassword(c *gin.Context) {
+	// Get user from context (set by middleware)
+	userInterface, exists := c.Get("user")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "User not authenticated",
+		})
+		return
+	}
+
+	user, ok := userInterface.(*models.User)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Internal server error",
+		})
+		return
+	}
+
+	var req models.ChangePasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Invalid data",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	// Verify current password
+	if !user.CheckPassword(req.CurrentPassword) {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Current password is incorrect",
+		})
+		return
+	}
+
+	// Validate new password length
+	if len(req.NewPassword) < 6 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "New password must be at least 6 characters long",
+		})
+		return
+	}
+
+	// Set new password
+	if err := user.SetPassword(req.NewPassword); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to process new password",
+		})
+		return
+	}
+
+	// Save updated user
+	if err := ac.DB.Save(user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to update password",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Password changed successfully",
+	})
+}
+
 // generateJWT generates a JWT token for the user
 func (ac *AuthController) generateJWT(user *models.User) (string, error) {
 	// Get secret from environment or use default value

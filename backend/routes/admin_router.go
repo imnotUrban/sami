@@ -22,6 +22,7 @@ func SetupAdminRoutes(r *gin.Engine, adminController *controller.AdminController
 	{
 		// Admin user management operations
 		admin.GET("/users", adminController.GetUsers)           // GET /admin/users
+		admin.POST("/users/invite", adminController.InviteUser) // POST /admin/users/invite
 		admin.GET("/users/stats", adminController.GetUserStats) // GET /admin/users/stats
 		admin.PUT("/users/:id", adminController.UpdateUser)     // PUT /admin/users/:id
 		admin.DELETE("/users/:id", adminController.DeleteUser)  // DELETE /admin/users/:id

@@ -450,3 +450,101 @@ func (cc *CommentController) DeleteComment(c *gin.Context) {
 		"message": "Comment deleted successfully",
 	})
 }
+
+// GetAllUserComments retrieves all comments from projects the user has access to
+func (cc *CommentController) GetAllUserComments(c *gin.Context) {
+	// Get authenticated user
+	userInterface, exists := c.Get("user")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "User not authenticated",
+		})
+		return
+	}
+
+	user, ok := userInterface.(*models.User)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Internal server error",
+		})
+		return
+	}
+
+	// Get query parameters for filtering
+	commentType := c.Query("type")
+	projectID := c.Query("project_id")
+
+	// First, get all projects the user has access to
+	var accessibleProjectIDs []uint
+
+	// Query for projects where user is owner or projects that are public
+	var ownedOrPublicProjects []models.Project
+	if err := cc.DB.Where("owner_id = ? OR visibility = ?", user.ID, "public").
+		Select("id").Find(&ownedOrPublicProjects).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to fetch accessible projects",
+		})
+		return
+	}
+
+	for _, project := range ownedOrPublicProjects {
+		accessibleProjectIDs = append(accessibleProjectIDs, project.ID)
+	}
+
+	// Also get projects where user is a collaborator
+	var collaboratorProjectIDs []uint
+	if err := cc.DB.Model(&models.ProjectCollaborator{}).
+		Where("user_id = ? AND state = ?", user.ID, "active").
+		Pluck("project_id", &collaboratorProjectIDs).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to fetch collaborator projects",
+		})
+		return
+	}
+
+	// Combine all accessible project IDs
+	for _, projectID := range collaboratorProjectIDs {
+		accessibleProjectIDs = append(accessibleProjectIDs, projectID)
+	}
+
+	// If no accessible projects, return empty result
+	if len(accessibleProjectIDs) == 0 {
+		c.JSON(http.StatusOK, gin.H{
+			"comments": []models.CommentResponse{},
+		})
+		return
+	}
+
+	var comments []models.Comment
+
+	// Build query for comments
+	query := cc.DB.Where("project_id IN ? AND status = ?", accessibleProjectIDs, "active")
+
+	// Apply filters
+	if commentType != "" {
+		query = query.Where("type = ?", commentType)
+	}
+
+	if projectID != "" {
+		query = query.Where("project_id = ?", projectID)
+	}
+
+	// Find all comments (including replies) with relationships
+	if err := query.Preload("User").Preload("Service").Preload("Project").
+		Order("created_at DESC").Find(&comments).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to fetch comments",
+		})
+		return
+	}
+
+	// Convert to response format
+	var commentResponses []models.CommentResponse
+	for _, comment := range comments {
+		commentResponses = append(commentResponses, comment.ToResponse())
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"comments": commentResponses,
+	})
+}

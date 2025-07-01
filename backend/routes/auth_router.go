@@ -20,6 +20,9 @@ func SetupAuthRoutes(r *gin.Engine, authController *controller.AuthController) {
 		protected.Use(authController.AuthMiddleware())
 		{
 			protected.GET("/me", authController.Me)
+			protected.GET("/profile", authController.Me) // Alias for /me
+			protected.PUT("/profile", authController.UpdateProfile)
+			protected.POST("/change-password", authController.ChangePassword)
 			protected.POST("/logout", authController.Logout)
 		}
 	}

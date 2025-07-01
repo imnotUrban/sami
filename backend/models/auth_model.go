@@ -13,9 +13,11 @@ type User struct {
 	Name         string     `json:"name" gorm:"size:100"`
 	Email        string     `json:"email" gorm:"unique;not null;size:255"`
 	PasswordHash string     `json:"-" gorm:"not null;column:password_hash"`
+	Phone        *string    `json:"phone" gorm:"size:20"`
 	Role         string     `json:"role" gorm:"default:user;size:50"`
 	Status       string     `json:"status" gorm:"default:active;size:20"`
 	CreatedAt    time.Time  `json:"created_at" gorm:"not null;default:now()"`
+	UpdatedAt    time.Time  `json:"updated_at" gorm:"not null;default:now()"`
 	LastLogin    *time.Time `json:"last_login"`
 	DeletedAt    *time.Time `json:"deleted_at"`
 }
@@ -36,11 +38,14 @@ type LoginRequest struct {
 // UserResponse represents user response (without sensitive data)
 type UserResponse struct {
 	ID        uint       `json:"id"`
-	Name      string     `json:"name"`
+	Username  string     `json:"username"`
+	Name      string     `json:"full_name"`
 	Email     string     `json:"email"`
+	Phone     *string    `json:"phone"`
 	Role      string     `json:"role"`
 	Status    string     `json:"status"`
 	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
 	LastLogin *time.Time `json:"last_login"`
 }
 
@@ -48,6 +53,19 @@ type UserResponse struct {
 type LoginResponse struct {
 	Token string       `json:"token"`
 	User  UserResponse `json:"user"`
+}
+
+// UpdateProfileRequest represents profile update data
+type UpdateProfileRequest struct {
+	Name  string `json:"full_name" binding:"required,min=2,max=100"`
+	Email string `json:"email" binding:"required,email"`
+	Phone string `json:"phone"`
+}
+
+// ChangePasswordRequest represents password change data
+type ChangePasswordRequest struct {
+	CurrentPassword string `json:"current_password" binding:"required"`
+	NewPassword     string `json:"new_password" binding:"required,min=6"`
 }
 
 // SetPassword sets the hashed password
@@ -70,11 +88,14 @@ func (u *User) CheckPassword(password string) bool {
 func (u *User) ToResponse() UserResponse {
 	return UserResponse{
 		ID:        u.ID,
+		Username:  u.Email, // Use email as username for now
 		Name:      u.Name,
 		Email:     u.Email,
+		Phone:     u.Phone,
 		Role:      u.Role,
 		Status:    u.Status,
 		CreatedAt: u.CreatedAt,
+		UpdatedAt: u.UpdatedAt,
 		LastLogin: u.LastLogin,
 	}
 }

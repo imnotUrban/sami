@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm"
 
 	"sami/controller"
+	"sami/models"
 	"sami/routes"
 )
 
@@ -48,7 +49,6 @@ func main() {
 	serviceController := &controller.ServiceController{DB: DB}
 	dependencyController := &controller.DependencyController{DB: DB}
 	commentController := &controller.CommentController{DB: DB}
-	snapshotController := &controller.SnapshotController{DB: DB}
 	adminController := &controller.AdminController{DB: DB}
 
 	// Setup routes
@@ -57,7 +57,6 @@ func main() {
 	routes.SetupServiceRoutes(r, serviceController, authController)
 	routes.SetupDependencyRoutes(r, dependencyController, authController)
 	routes.SetupCommentRoutes(r, commentController, authController)
-	routes.SetupSnapshotRoutes(r, snapshotController, authController)
 	routes.SetupAdminRoutes(r, adminController, authController)
 
 	// Start server
@@ -84,8 +83,8 @@ func connectDatabase() {
 
 	DB = database
 
-	// Auto migration (optional, since you have your SQL schema)
-	// DB.AutoMigrate(&models.User{})
+	// Auto migration - migrate all models
+	DB.AutoMigrate(&models.User{})
 
 	log.Println("Database connected successfully")
 }
