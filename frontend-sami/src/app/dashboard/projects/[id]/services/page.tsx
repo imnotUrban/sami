@@ -57,6 +57,7 @@ import {
   MessageCircle,
   Undo2,
   Redo2,
+  Palette,
 } from "lucide-react"
 import { DependencyDialog } from "@/components/dependency-dialog"
 import { ServiceDialog } from "@/components/service-dialog"
@@ -68,6 +69,12 @@ import { type Service, type Dependency } from "@/lib/services-api"
 import { SaveStatusIndicator, CompactSaveStatus } from "@/components/save-status-indicator"
 import Layout from "@/components/Layout"
 import { ProjectCommentsPanel } from "@/components/project-comments-panel"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
 
@@ -436,6 +443,141 @@ const getDependencyTypeColors = (protocol: string, type: string) => {
   return { color: '#3b82f6', background: 'bg-blue-50', border: 'border-blue-200' }
 }
 
+// Background styles configuration
+interface BackgroundConfig {
+  gap?: number;
+  size?: number;
+  color?: string;
+  style?: {
+    background?: string;
+    backgroundImage?: string;
+  };
+}
+
+interface BackgroundStyle {
+  name: string;
+  config: BackgroundConfig;
+}
+
+const backgroundStyles: Record<string, BackgroundStyle> = {
+  gradient: {
+    name: "Gradiente Suave",
+    config: {
+      gap: 20,
+      size: 1.2,
+      color: "#8b5cf6",
+      style: {
+        background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #e2e8f0 100%)',
+        backgroundImage: `radial-gradient(circle at center, #8b5cf6 1.2px, transparent 1.2px)`,
+      },
+    },
+  },
+  volcanic: {
+    name: "Volcánico",
+    config: {
+      gap: 18,
+      size: 2.0,
+      color: "#ff0080",
+      style: {
+        background: 'radial-gradient(circle at 30% 70%, #000000 0%, #1a0000 30%, #330000 60%, #660000 100%)',
+        backgroundImage: `radial-gradient(circle at center, #ff0080 2.0px, transparent 2.0px), radial-gradient(circle at 25% 25%, rgba(255, 0, 128, 0.3) 0%, transparent 40%)`,
+      },
+    },
+  },
+  electric: {
+    name: "Eléctrico",
+    config: {
+      gap: 15,
+      size: 2.5,
+      color: "#00ffff",
+      style: {
+        background: 'linear-gradient(45deg, #000011 0%, #001122 25%, #002244 50%, #003366 75%, #004488 100%)',
+        backgroundImage: `radial-gradient(circle at center, #00ffff 2.5px, transparent 2.5px), radial-gradient(circle at 75% 25%, rgba(0, 255, 255, 0.4) 0%, transparent 30%)`,
+      },
+    },
+  },
+  matrix: {
+    name: "Matrix",
+    config: {
+      gap: 12,
+      size: 3.0,
+      color: "#00ff00",
+      style: {
+        background: 'linear-gradient(180deg, #000000 0%, #001100 50%, #000000 100%)',
+        backgroundImage: `radial-gradient(circle at center, #00ff00 3.0px, transparent 3.0px), linear-gradient(90deg, rgba(0, 255, 0, 0.1) 0%, transparent 50%, rgba(0, 255, 0, 0.1) 100%)`,
+      },
+    },
+  },
+  inferno: {
+    name: "Infierno",
+    config: {
+      gap: 20,
+      size: 2.2,
+      color: "#ffff00",
+      style: {
+        background: 'radial-gradient(ellipse at center, #ff0000 0%, #cc0000 30%, #990000 60%, #330000 80%, #000000 100%)',
+        backgroundImage: `radial-gradient(circle at center, #ffff00 2.2px, transparent 2.2px), radial-gradient(circle at 60% 40%, rgba(255, 255, 0, 0.3) 0%, transparent 50%)`,
+      },
+    },
+  },
+  cosmic: {
+    name: "Cósmico",
+    config: {
+      gap: 25,
+      size: 1.8,
+      color: "#ff00ff",
+      style: {
+        background: 'radial-gradient(circle at 20% 80%, #000033 0%, #000066 20%, #330066 40%, #660099 60%, #9900cc 80%, #cc00ff 100%)',
+        backgroundImage: `radial-gradient(circle at center, #ff00ff 1.8px, transparent 1.8px), radial-gradient(circle at 80% 20%, rgba(255, 0, 255, 0.2) 0%, transparent 60%)`,
+      },
+    },
+  },
+  arctic: {
+    name: "Ártico",
+    config: {
+      gap: 22,
+      size: 1.5,
+      color: "#0080ff",
+      style: {
+        background: 'linear-gradient(135deg, #ffffff 0%, #e6f3ff 25%, #ccddff 50%, #99bbff 75%, #6699ff 100%)',
+        backgroundImage: `radial-gradient(circle at center, #0080ff 1.5px, transparent 1.5px)`,
+      },
+    },
+  },
+  laser: {
+    name: "Láser",
+    config: {
+      gap: 14,
+      size: 2.8,
+      color: "#ff4000",
+      style: {
+        background: 'linear-gradient(45deg, #000000 0%, #220000 20%, #440000 40%, #660000 60%, #880000 80%, #aa0000 100%)',
+        backgroundImage: `radial-gradient(circle at center, #ff4000 2.8px, transparent 2.8px), linear-gradient(45deg, rgba(255, 64, 0, 0.2) 0%, transparent 25%, rgba(255, 64, 0, 0.2) 50%, transparent 75%)`,
+      },
+    },
+  },
+  toxic: {
+    name: "Tóxico",
+    config: {
+      gap: 16,
+      size: 2.4,
+      color: "#80ff00",
+      style: {
+        background: 'radial-gradient(circle at center, #001100 0%, #002200 30%, #003300 60%, #004400 80%, #005500 100%)',
+        backgroundImage: `radial-gradient(circle at center, #80ff00 2.4px, transparent 2.4px), radial-gradient(circle at 40% 60%, rgba(128, 255, 0, 0.3) 0%, transparent 40%)`,
+      },
+    },
+  },
+  clean: {
+    name: "Limpio",
+    config: {
+      style: {
+        background: '#ffffff',
+      },
+    },
+  },
+}
+
 function ServiceDependencyFlow() {
   const params = useParams()
   const router = useRouter()
@@ -443,6 +585,41 @@ function ServiceDependencyFlow() {
   
   // State for project info
   const [projectName, setProjectName] = useState<string>("")
+  
+  // Background selection state
+  const [selectedBackground, setSelectedBackground] = useState<string>('gradient')
+  
+  // Connection Types legend state
+  const [showConnectionTypes, setShowConnectionTypes] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('sami-show-connection-types')
+      return saved !== null ? JSON.parse(saved) : true
+    }
+    return true
+  })
+  
+  // Service Types legend state
+  const [showServiceTypes, setShowServiceTypes] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('sami-show-service-types')
+      return saved !== null ? JSON.parse(saved) : true
+    }
+    return true
+  })
+  
+  // Save connection types visibility state
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('sami-show-connection-types', JSON.stringify(showConnectionTypes))
+    }
+  }, [showConnectionTypes])
+  
+  // Save service types visibility state
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('sami-show-service-types', JSON.stringify(showServiceTypes))
+    }
+  }, [showServiceTypes])
   
   // Use the optimized flow hook
   const flowHook = useServicesFlow({ 
@@ -761,19 +938,66 @@ function ServiceDependencyFlow() {
             fitView
             fitViewOptions={{ padding: 0.1 }}
           >
-            <Background 
-              gap={20}
-              size={0.8}
-              color="#94a3b8"
+            <Background {...backgroundStyles[selectedBackground].config} />
+            <Controls 
+              position="top-left"
+              showZoom={true}
+              showFitView={true}
+              showInteractive={true}
               style={{
-                background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%)',
-                backgroundImage: `
-                  radial-gradient(circle at center, #94a3b8 0.8px, transparent 0.8px)
-                `,
-                backgroundSize: '20px 20px'
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+                background: 'rgba(255, 255, 255, 0.95)',
+                border: '1px solid #e5e7eb',
+                borderRadius: '12px',
+                padding: '8px',
+                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                backdropFilter: 'blur(8px)',
               }}
             />
-            <Controls />
+            
+            {/* Background Selector */}
+            <div className="absolute top-20 left-4 z-20">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="bg-white/95 border-gray-200 text-gray-700 hover:bg-gray-50 shadow-lg backdrop-blur-sm"
+                  >
+                    <Palette size={16} className="mr-2" />
+                    {backgroundStyles[selectedBackground].name}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-48 bg-white/95 backdrop-blur-sm border-gray-200 shadow-xl">
+                  {Object.entries(backgroundStyles).map(([key, style]) => (
+                    <DropdownMenuItem
+                      key={key}
+                      onClick={() => setSelectedBackground(key)}
+                      className={`cursor-pointer ${
+                        selectedBackground === key 
+                          ? 'bg-blue-50 text-blue-700' 
+                          : 'text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div 
+                          className="w-4 h-4 rounded border border-gray-300"
+                          style={{
+                            background: style.config.style?.background || '#ffffff',
+                            backgroundImage: style.config.style?.backgroundImage || 'none',
+                            backgroundSize: style.config.gap ? `${style.config.gap}px ${style.config.gap}px` : 'auto',
+                          }}
+                        />
+                        {style.name}
+                      </div>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
             <MiniMap
               nodeStrokeColor={(node) => {
                 const service = node.data as Service
@@ -856,7 +1080,6 @@ function ServiceDependencyFlow() {
                 background: 'rgba(255, 255, 255, 0.98)',
                 boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
                 backdropFilter: 'blur(8px)',
-                overflow: 'hidden',
               }}
               maskColor="rgba(79, 70, 229, 0.15)"
               maskStrokeColor="#4f46e5"
@@ -869,49 +1092,71 @@ function ServiceDependencyFlow() {
             <ConnectionStyles />
 
             {/* MiniMap Legend Overlay */}
-            <div className="absolute bottom-[200px] right-5 bg-white/95 backdrop-blur-sm border-2 border-gray-200 rounded-xl shadow-lg px-3 z-10 py-2">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full animate-pulse"></div>
-                <span className="text-xs font-semibold text-gray-700">Service Types</span>
+            <div className="absolute bottom-[200px] right-5 bg-white/95 backdrop-blur-sm border-2 border-gray-200 rounded-xl shadow-lg z-10 overflow-hidden">
+              {/* Header with toggle button */}
+              <div className="flex items-center justify-between px-3 py-2 border-b border-gray-100">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full animate-pulse"></div>
+                  <span className="text-xs font-semibold text-gray-700">Service Types</span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowServiceTypes(!showServiceTypes)}
+                  className="h-5 w-5 p-0 hover:bg-gray-100"
+                  title={showServiceTypes ? "Ocultar tipos de servicio" : "Mostrar tipos de servicio"}
+                >
+                  {showServiceTypes ? (
+                    <X size={10} className="text-gray-600" />
+                  ) : (
+                    <Eye size={10} className="text-gray-600" />
+                  )}
+                </Button>
               </div>
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 bg-gradient-to-br from-purple-500 to-pink-500 rounded border border-purple-600 shadow-sm"></div>
-                  <span className="text-gray-600 font-medium">Gateway</span>
+              
+              {/* Collapsible content */}
+              {showServiceTypes && (
+                <div className="px-3 py-2">
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="flex items-center gap-1">
+                      <div className="w-3 h-3 bg-gradient-to-br from-purple-500 to-pink-500 rounded border border-purple-600 shadow-sm"></div>
+                      <span className="text-gray-600 font-medium">Gateway</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-3 h-3 bg-blue-500 rounded border border-blue-600"></div>
+                      <span className="text-gray-600">API</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-3 h-3 bg-emerald-500 rounded border border-emerald-600"></div>
+                      <span className="text-gray-600">DB</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-3 h-3 bg-violet-500 rounded border border-violet-600"></div>
+                      <span className="text-gray-600">Web</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-3 h-3 bg-orange-500 rounded border border-orange-600"></div>
+                      <span className="text-gray-600">Queue</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-3 h-3 bg-red-500 rounded border border-red-600"></div>
+                      <span className="text-gray-600">Cache</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-3 h-3 bg-amber-500 rounded border border-amber-600"></div>
+                      <span className="text-gray-600">Storage</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-3 h-3 bg-indigo-500 rounded border border-indigo-600"></div>
+                      <span className="text-gray-600">Auth</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-3 h-3 bg-teal-500 rounded border border-teal-600"></div>
+                      <span className="text-gray-600">Monitor</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 bg-blue-500 rounded border border-blue-600"></div>
-                  <span className="text-gray-600">API</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 bg-emerald-500 rounded border border-emerald-600"></div>
-                  <span className="text-gray-600">DB</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 bg-violet-500 rounded border border-violet-600"></div>
-                  <span className="text-gray-600">Web</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 bg-orange-500 rounded border border-orange-600"></div>
-                  <span className="text-gray-600">Queue</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 bg-red-500 rounded border border-red-600"></div>
-                  <span className="text-gray-600">Cache</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 bg-amber-500 rounded border border-amber-600"></div>
-                  <span className="text-gray-600">Storage</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 bg-indigo-500 rounded border border-indigo-600"></div>
-                  <span className="text-gray-600">Auth</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 bg-teal-500 rounded border border-teal-600"></div>
-                  <span className="text-gray-600">Monitor</span>
-                </div>
-              </div>
+              )}
             </div>
 
             {/* Header Controls Overlay */}
@@ -986,58 +1231,80 @@ function ServiceDependencyFlow() {
             </div>
             
             {/* Legend */}
-            <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm rounded-xl border shadow-xl p-4 max-w-xs z-10">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
-                <h4 className="text-sm font-bold text-gray-800">Connection Types</h4>
-              </div>
-              <p className="text-xs text-gray-500 mb-3">Click on connections to edit them</p>
-              
-              <div className="grid grid-cols-2 gap-2 text-xs">
+            <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm rounded-xl border shadow-xl z-10 overflow-hidden">
+              {/* Header with toggle button */}
+              <div className="flex items-center justify-between p-3 border-b border-gray-100">
                 <div className="flex items-center gap-2">
-                  <div className="w-5 h-0.5 bg-blue-500 rounded-full shadow-sm"></div>
-                  <span className="text-gray-700 font-medium">HTTP/REST</span>
+                  <div className="w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
+                  <h4 className="text-sm font-bold text-gray-800">Connection Types</h4>
                 </div>
-                
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-0.5 bg-purple-500 rounded-full shadow-sm"></div>
-                  <span className="text-gray-700 font-medium">gRPC</span>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-0.5 bg-pink-500 rounded-full shadow-sm"></div>
-                  <span className="text-gray-700 font-medium">GraphQL</span>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-0.5 bg-green-500 rounded-full shadow-sm"></div>
-                  <span className="text-gray-700 font-medium">Database</span>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-0.5 bg-orange-500 border-dashed border-t border-orange-600 rounded-sm"></div>
-                  <span className="text-gray-700 font-medium">Message Queue</span>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-0.5 bg-cyan-500 border-dotted border-t border-cyan-600 rounded-sm"></div>
-                  <span className="text-gray-700 font-medium">WebSocket</span>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-0.5 bg-amber-600 rounded-full shadow-sm"></div>
-                  <span className="text-gray-700 font-medium">File System</span>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-0.5 bg-red-500 rounded-full shadow-sm"></div>
-                  <span className="text-gray-700 font-medium">Cache</span>
-                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowConnectionTypes(!showConnectionTypes)}
+                  className="h-6 w-6 p-0 hover:bg-gray-100"
+                  title={showConnectionTypes ? "Ocultar leyenda" : "Mostrar leyenda"}
+                >
+                  {showConnectionTypes ? (
+                    <X size={12} className="text-gray-600" />
+                  ) : (
+                    <Eye size={12} className="text-gray-600" />
+                  )}
+                </Button>
               </div>
               
-              <div className="mt-3 pt-2 border-t border-gray-100">
-                <p className="text-xs text-gray-400 text-center">Drag nodes to reposition • Click to select</p>
-              </div>
+              {/* Collapsible content */}
+              {showConnectionTypes && (
+                <div className="p-3">
+                  <p className="text-xs text-gray-500 mb-3">Click on connections to edit them</p>
+                  
+                  <div className="grid grid-cols-2 gap-2 text-xs max-w-xs">
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-0.5 bg-blue-500 rounded-full shadow-sm"></div>
+                      <span className="text-gray-700 font-medium">HTTP/REST</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-0.5 bg-purple-500 rounded-full shadow-sm"></div>
+                      <span className="text-gray-700 font-medium">gRPC</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-0.5 bg-pink-500 rounded-full shadow-sm"></div>
+                      <span className="text-gray-700 font-medium">GraphQL</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-0.5 bg-green-500 rounded-full shadow-sm"></div>
+                      <span className="text-gray-700 font-medium">Database</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-0.5 bg-orange-500 border-dashed border-t border-orange-600 rounded-sm"></div>
+                      <span className="text-gray-700 font-medium">Message Queue</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-0.5 bg-cyan-500 border-dotted border-t border-cyan-600 rounded-sm"></div>
+                      <span className="text-gray-700 font-medium">WebSocket</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-0.5 bg-amber-600 rounded-full shadow-sm"></div>
+                      <span className="text-gray-700 font-medium">File System</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-0.5 bg-red-500 rounded-full shadow-sm"></div>
+                      <span className="text-gray-700 font-medium">Cache</span>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-3 pt-2 border-t border-gray-100">
+                    <p className="text-xs text-gray-400 text-center">Drag nodes to reposition • Click to select</p>
+                  </div>
+                </div>
+              )}
             </div>
           </ReactFlow>
 
