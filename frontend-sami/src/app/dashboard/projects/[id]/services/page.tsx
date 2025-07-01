@@ -1,0 +1,1756 @@
+"use client"
+
+import type React from "react"
+import { useState, useCallback, useEffect } from "react"
+import { useParams, useRouter } from "next/navigation"
+import ReactFlow, {
+  type Node,
+  type Edge,
+  Background,
+  Controls,
+  MiniMap,
+  useNodesState,
+  useEdgesState,
+  ReactFlowProvider,
+  type NodeTypes,
+  Handle,
+  Position,
+  MarkerType,
+  ConnectionLineType,
+} from "reactflow"
+import "reactflow/dist/style.css"
+
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Separator } from "@/components/ui/separator"
+import {
+  Server,
+  Database,
+  Globe,
+  Zap,
+  Plus,
+  Settings,
+  Eye,
+  GitBranch,
+  Activity,
+  Clock,
+  ArrowRight,
+  Link,
+  Edit,
+  ArrowLeft,
+  Trash2,
+  Loader2,
+  PanelRightOpen,
+  PanelRightClose,
+  X,
+  ExternalLink,
+  Calendar,
+  User,
+  FileText,
+  Monitor,
+  Hash,
+  Copy,
+  Files,
+  MessageCircle,
+  Undo2,
+  Redo2,
+} from "lucide-react"
+import { DependencyDialog } from "@/components/dependency-dialog"
+import { ServiceDialog } from "@/components/service-dialog"
+import CustomEdge from "@/components/custom-edge"
+import { ConnectionNotification } from "@/components/connection-notification"
+import { ConnectionStyles } from "@/components/connection-styles"
+import { useServicesFlow } from "@/lib/use-services-flow"
+import { type Service, type Dependency } from "@/lib/services-api"
+import { SaveStatusIndicator, CompactSaveStatus } from "@/components/save-status-indicator"
+import Layout from "@/components/Layout"
+import { ProjectCommentsPanel } from "@/components/project-comments-panel"
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
+
+// Custom Node Components  
+const ServiceNode = ({ data }: { data: Service }) => {
+  const getIcon = (type: string) => {
+    switch (type.toLowerCase()) {
+      case "api gateway":
+      case "gateway":
+        return <Settings className="w-4 h-4" />
+      case "api":
+        return <Server className="w-4 h-4" />
+      case "db":
+      case "database":
+        return <Database className="w-4 h-4" />
+      case "web":
+      case "web service":
+        return <Globe className="w-4 h-4" />
+      case "queue":
+      case "message queue":
+        return <ArrowRight className="w-4 h-4" />
+      case "cache":
+        return <Zap className="w-4 h-4" />
+      case "storage":
+      case "storage/file":
+        return <FileText className="w-4 h-4" />
+      case "auth":
+      case "auth/security":
+        return <User className="w-4 h-4" />
+      case "monitoring":
+      case "monitoring/logs":
+        return <Monitor className="w-4 h-4" />
+      default:
+        return <Zap className="w-4 h-4" />
+    }
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "active":
+        return "bg-green-500"
+      case "inactive":
+        return "bg-red-500"
+      default:
+        return "bg-gray-500"
+    }
+  }
+
+  const getEnvironmentColor = (env: string) => {
+    switch (env) {
+      case "production":
+        return "bg-blue-100 text-blue-800 border-blue-200"
+      case "development":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200"
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200"
+    }
+  }
+
+  const getServiceTypeColors = (type: string) => {
+    switch (type.toLowerCase()) {
+      case "api gateway":
+      case "gateway":
+        return {
+          background: "bg-gradient-to-br from-purple-50 to-pink-50",
+          border: "border-purple-300 shadow-purple-100",
+          icon: "text-purple-700",
+          hover: "hover:from-purple-100 hover:to-pink-100"
+        }
+      case "api":
+        return {
+          background: "bg-blue-50",
+          border: "border-blue-200",
+          icon: "text-blue-600",
+          hover: "hover:bg-blue-100"
+        }
+      case "db":
+      case "database":
+        return {
+          background: "bg-emerald-50",
+          border: "border-emerald-200",
+          icon: "text-emerald-600",
+          hover: "hover:bg-emerald-100"
+        }
+      case "web":
+      case "web service":
+        return {
+          background: "bg-violet-50",
+          border: "border-violet-200",
+          icon: "text-violet-600",
+          hover: "hover:bg-violet-100"
+        }
+      case "queue":
+      case "message queue":
+        return {
+          background: "bg-orange-50",
+          border: "border-orange-200",
+          icon: "text-orange-600",
+          hover: "hover:bg-orange-100"
+        }
+      case "cache":
+      case "redis":
+        return {
+          background: "bg-red-50",
+          border: "border-red-200",
+          icon: "text-red-600",
+          hover: "hover:bg-red-100"
+        }
+      case "storage":
+      case "storage/file":
+      case "file":
+        return {
+          background: "bg-amber-50",
+          border: "border-amber-200",
+          icon: "text-amber-600",
+          hover: "hover:bg-amber-100"
+        }
+      case "auth":
+      case "auth/security":
+      case "security":
+        return {
+          background: "bg-indigo-50",
+          border: "border-indigo-200",
+          icon: "text-indigo-600",
+          hover: "hover:bg-indigo-100"
+        }
+      case "monitoring":
+      case "monitoring/logs":
+      case "logs":
+        return {
+          background: "bg-teal-50",
+          border: "border-teal-200",
+          icon: "text-teal-600",
+          hover: "hover:bg-teal-100"
+        }
+      default:
+        return {
+          background: "bg-gray-50",
+          border: "border-gray-200",
+          icon: "text-gray-600",
+          hover: "hover:bg-gray-100"
+        }
+    }
+  }
+
+  const serviceColors = getServiceTypeColors(data.type)
+
+  return (
+    <>
+      {/* Connection Handles */}
+      <Handle
+        type="target"
+        position={Position.Left}
+        className={`w-3 h-3 border-2 border-white shadow-lg ${serviceColors.icon.replace('text-', '!bg-')}`}
+        style={{ left: -6 }}
+      />
+      <Handle
+        type="source"
+        position={Position.Right}
+        className={`w-3 h-3 border-2 border-white shadow-lg ${serviceColors.icon.replace('text-', '!bg-')}`}
+        style={{ right: -6 }}
+      />
+      <Handle
+        type="target"
+        position={Position.Top}
+        className={`w-3 h-3 border-2 border-white shadow-lg ${serviceColors.icon.replace('text-', '!bg-')}`}
+        style={{ top: -6 }}
+      />
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        className={`w-3 h-3 border-2 border-white shadow-lg ${serviceColors.icon.replace('text-', '!bg-')}`}
+        style={{ bottom: -6 }}
+      />
+
+      <Card className={`min-w-[200px] shadow-lg border-2 hover:shadow-xl transition-all duration-200 ${serviceColors.background} ${serviceColors.border} ${serviceColors.hover}`}>
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className={serviceColors.icon}>
+                {getIcon(data.type)}
+              </div>
+              <CardTitle className="text-sm font-semibold">{data.name}</CardTitle>
+            </div>
+            <div className={`w-3 h-3 rounded-full ${getStatusColor(data.status)}`} />
+          </div>
+          <CardDescription className="text-xs">{data.description}</CardDescription>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <div className="flex flex-wrap gap-1 mb-2">
+            <Badge variant="outline" className={`text-xs ${getEnvironmentColor(data.environment)}`}>
+              {data.environment}
+            </Badge>
+            <Badge variant="outline" className={`text-xs ${serviceColors.icon} bg-white/50 border-current`}>
+              {data.type}
+            </Badge>
+            {data.version && (
+              <Badge variant="outline" className="text-xs">
+                v{data.version}
+              </Badge>
+            )}
+          </div>
+          {data.language && <div className="text-xs text-muted-foreground">{data.language}</div>}
+        </CardContent>
+      </Card>
+    </>
+  )
+}
+
+const nodeTypes: NodeTypes = {
+  serviceNode: ServiceNode,
+}
+
+const edgeTypes = {
+  custom: CustomEdge,
+}
+
+// Helper function to get service icon
+const getServiceIcon = (type: string) => {
+  switch (type.toLowerCase()) {
+    case "api gateway":
+    case "gateway":
+      return <Settings className="w-4 h-4" />
+    case "api":
+      return <Server className="w-4 h-4" />
+    case "db":
+    case "database":
+      return <Database className="w-4 h-4" />
+    case "web":
+    case "web service":
+      return <Globe className="w-4 h-4" />
+    case "queue":
+    case "message queue":
+      return <ArrowRight className="w-4 h-4" />
+    case "cache":
+      return <Zap className="w-4 h-4" />
+    case "storage":
+    case "storage/file":
+      return <FileText className="w-4 h-4" />
+    case "auth":
+    case "auth/security":
+      return <User className="w-4 h-4" />
+    case "monitoring":
+    case "monitoring/logs":
+      return <Monitor className="w-4 h-4" />
+    default:
+      return <Zap className="w-4 h-4" />
+  }
+}
+
+// Helper function to get service type colors for sidebar
+const getServiceTypeColors = (type: string) => {
+  switch (type.toLowerCase()) {
+    case "api gateway":
+    case "gateway":
+      return {
+        background: "bg-gradient-to-br from-purple-50 to-pink-50",
+        border: "border-purple-300",
+        icon: "text-purple-700",
+        badge: "bg-purple-100 text-purple-800 border-purple-200"
+      }
+    case "api":
+      return {
+        background: "bg-blue-50",
+        border: "border-blue-200",
+        icon: "text-blue-600",
+        badge: "bg-blue-100 text-blue-800 border-blue-200"
+      }
+    case "db":
+    case "database":
+      return {
+        background: "bg-emerald-50",
+        border: "border-emerald-200",
+        icon: "text-emerald-600",
+        badge: "bg-emerald-100 text-emerald-800 border-emerald-200"
+      }
+    case "web":
+    case "web service":
+      return {
+        background: "bg-violet-50",
+        border: "border-violet-200",
+        icon: "text-violet-600",
+        badge: "bg-violet-100 text-violet-800 border-violet-200"
+      }
+    case "queue":
+    case "message queue":
+      return {
+        background: "bg-orange-50",
+        border: "border-orange-200",
+        icon: "text-orange-600",
+        badge: "bg-orange-100 text-orange-800 border-orange-200"
+      }
+    case "cache":
+    case "redis":
+      return {
+        background: "bg-red-50",
+        border: "border-red-200",
+        icon: "text-red-600",
+        badge: "bg-red-100 text-red-800 border-red-200"
+      }
+    case "storage":
+    case "storage/file":
+    case "file":
+      return {
+        background: "bg-amber-50",
+        border: "border-amber-200",
+        icon: "text-amber-600",
+        badge: "bg-amber-100 text-amber-800 border-amber-200"
+      }
+    case "auth":
+    case "auth/security":
+    case "security":
+      return {
+        background: "bg-indigo-50",
+        border: "border-indigo-200",
+        icon: "text-indigo-600",
+        badge: "bg-indigo-100 text-indigo-800 border-indigo-200"
+      }
+    case "monitoring":
+    case "monitoring/logs":
+    case "logs":
+      return {
+        background: "bg-teal-50",
+        border: "border-teal-200",
+        icon: "text-teal-600",
+        badge: "bg-teal-100 text-teal-800 border-teal-200"
+      }
+    default:
+      return {
+        background: "bg-gray-50",
+        border: "border-gray-200",
+        icon: "text-gray-600",
+        badge: "bg-gray-100 text-gray-800 border-gray-200"
+      }
+  }
+}
+
+// Helper function to get dependency type colors
+const getDependencyTypeColors = (protocol: string, type: string) => {
+  const lowerProtocol = protocol?.toLowerCase() || ''
+  const lowerType = type?.toLowerCase() || ''
+  
+  if (lowerType.includes('database') || lowerProtocol.includes('postgresql') || 
+      lowerProtocol.includes('mysql') || lowerProtocol.includes('mongodb')) {
+    return { color: '#10b981', background: 'bg-emerald-50', border: 'border-emerald-200' }
+  }
+  
+  if (lowerType.includes('message queue') || lowerType.includes('queue') ||
+      lowerProtocol.includes('kafka') || lowerProtocol.includes('rabbitmq')) {
+    return { color: '#f59e0b', background: 'bg-orange-50', border: 'border-orange-200' }
+  }
+  
+  if (lowerType.includes('cache') || lowerProtocol.includes('redis')) {
+    return { color: '#ef4444', background: 'bg-red-50', border: 'border-red-200' }
+  }
+  
+  if (lowerType.includes('grpc') || lowerProtocol.includes('grpc')) {
+    return { color: '#8b5cf6', background: 'bg-purple-50', border: 'border-purple-200' }
+  }
+  
+  if (lowerProtocol.includes('websocket')) {
+    return { color: '#06b6d4', background: 'bg-cyan-50', border: 'border-cyan-200' }
+  }
+  
+  // Default HTTP/REST
+  return { color: '#3b82f6', background: 'bg-blue-50', border: 'border-blue-200' }
+}
+
+function ServiceDependencyFlow() {
+  const params = useParams()
+  const router = useRouter()
+  const projectId = parseInt(params.id as string)
+  
+  // State for project info
+  const [projectName, setProjectName] = useState<string>("")
+  
+  // Use the optimized flow hook
+  const flowHook = useServicesFlow({ 
+    projectId,
+    autoSaveInterval: parseInt(process.env.NEXT_PUBLIC_AUTOSAVE_INTERVAL || '30'), // Configurable via .env
+    enableAutoSave: true 
+  })
+  
+  // React Flow state - se sincroniza con el hook
+  const [nodes, setNodes, onNodesChange] = useNodesState(flowHook.nodes)
+  const [edges, setEdges, onEdgesChange] = useEdgesState(flowHook.edges)
+  
+  // Navigation guard - Prevent leaving with unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (flowHook.hasUnsavedChanges) {
+        e.preventDefault()
+        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?'
+        return 'You have unsaved changes. Are you sure you want to leave?'
+      }
+    }
+
+    const handlePopState = () => {
+      if (flowHook.hasUnsavedChanges) {
+        const shouldLeave = window.confirm(
+          'You have unsaved changes that will be lost. Do you want to save before leaving?'
+        )
+        
+        if (shouldLeave) {
+          // User wants to save first
+          flowHook.saveChanges(true).then(() => {
+            // After saving, allow navigation
+            window.history.back()
+          }).catch((error) => {
+            console.error('Error saving before navigation:', error)
+            alert('Error saving changes. Please try again.')
+          })
+        }
+        // If user doesn't want to save, do nothing (stay on page)
+        return false
+      }
+    }
+
+    // Add event listeners
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    window.addEventListener('popstate', handlePopState)
+    
+    // Cleanup
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+      window.removeEventListener('popstate', handlePopState)
+    }
+  }, [flowHook.hasUnsavedChanges, flowHook.saveChanges])
+  
+  // UI state
+  const [selectedService, setSelectedService] = useState<Service | null>(null)
+  const [selectedDependency, setSelectedDependency] = useState<Dependency | null>(null)
+  const [showDependencyForm, setShowDependencyForm] = useState(false)
+  const [showServiceForm, setShowServiceForm] = useState(false)
+  const [editingService, setEditingService] = useState<Service | null>(null)
+  const [showNotification, setShowNotification] = useState(false)
+  const [lastConnection, setLastConnection] = useState<{ source: string; target: string } | null>(null)
+  const [rightSidebarOpen, setRightSidebarOpen] = useState(true) // Right sidebar visibility state
+  const [showComments, setShowComments] = useState(false) // Comments panel visibility
+
+  // Sync flow nodes/edges with hook data
+  useEffect(() => {
+    setNodes(flowHook.nodes)
+  }, [flowHook.nodes, setNodes])
+
+  useEffect(() => {
+    setEdges(flowHook.edges)
+  }, [flowHook.edges, setEdges])
+
+  // Fetch project info
+  useEffect(() => {
+    const fetchProject = async () => {
+      const token = localStorage.getItem('token')
+      if (!token) return
+
+      try {
+        const response = await fetch(`${API_URL}/projects/${projectId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          setProjectName(data.project?.name || `Project ${projectId}`)
+        }
+      } catch (error) {
+        console.error('Error fetching project:', error)
+      }
+    }
+
+    if (projectId) {
+      fetchProject()
+    }
+  }, [projectId])
+
+  // Event handlers
+  const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
+    setSelectedService(node.data as Service)
+    setSelectedDependency(null)
+  }, [])
+
+  const onEdgeClick = useCallback((event: React.MouseEvent, edge: Edge) => {
+    const dependency = flowHook.dependencies.find((dep) => dep.id.toString() === edge.id)
+    if (dependency) {
+      setSelectedDependency(dependency)
+      setSelectedService(null)
+      setShowDependencyForm(true)
+    }
+  }, [flowHook.dependencies])
+
+  const handleSaveService = async (serviceData: Partial<Service>) => {
+    try {
+      if (editingService) {
+        await flowHook.updateService(editingService.id, serviceData)
+      } else {
+        await flowHook.createService(serviceData)
+      }
+      setShowServiceForm(false)
+      setEditingService(null)
+    } catch (error) {
+      console.error('Error saving service:', error)
+    }
+  }
+
+  const handleSaveDependency = async (dependencyData: Partial<Dependency>) => {
+    try {
+      if (selectedDependency) {
+        await flowHook.updateDependency(selectedDependency.id, dependencyData)
+      } else {
+        await flowHook.createDependency(dependencyData)
+      }
+        setShowDependencyForm(false)
+        setSelectedDependency(null)
+    } catch (error) {
+      console.error('Error saving dependency:', error)
+    }
+  }
+
+  const handleDeleteService = async (serviceId: number) => {
+    try {
+      await flowHook.deleteService(serviceId)
+      setSelectedService(null)
+    } catch (error) {
+      console.error('Error deleting service:', error)
+    }
+  }
+
+  const handleDeleteDependency = async (dependencyId: number) => {
+    // Confirmar eliminación
+    const confirmed = window.confirm(
+      'Are you sure you want to delete this dependency? This action cannot be undone.'
+    )
+    
+    if (!confirmed) return
+    
+    try {
+      await flowHook.deleteDependency(dependencyId)
+      setSelectedDependency(null)
+      
+      // Mostrar mensaje de éxito
+      console.log('✅ Dependency deleted successfully')
+    } catch (error) {
+      console.error('❌ Error deleting dependency:', error)
+      alert('Error deleting dependency. Please try again.')
+    }
+  }
+
+  const handleCopyService = useCallback((service: Service) => {
+    flowHook.copyService(service)
+    // Mostrar notificación visual
+    const notification = document.createElement('div')
+    notification.textContent = `📋 Service "${service.name}" copied! Press Ctrl+V to paste.`
+    notification.className = 'fixed top-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg z-50 transition-all'
+    document.body.appendChild(notification)
+    
+    // Remover notificación después de 3 segundos
+    setTimeout(() => {
+      notification.style.opacity = '0'
+      setTimeout(() => document.body.removeChild(notification), 300)
+    }, 3000)
+  }, [flowHook])
+
+  const handleDuplicateService = useCallback(async (service: Service) => {
+    try {
+      const duplicatedService = await flowHook.duplicateService(service)
+      if (duplicatedService) {
+        // Seleccionar el servicio duplicado
+        setSelectedService(duplicatedService)
+        
+        // Mostrar notificación
+        const notification = document.createElement('div')
+        notification.textContent = `✨ Service duplicated as "${duplicatedService.name}"`
+        notification.className = 'fixed top-4 right-4 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg z-50 transition-all'
+        document.body.appendChild(notification)
+        
+        setTimeout(() => {
+          notification.style.opacity = '0'
+          setTimeout(() => document.body.removeChild(notification), 300)
+        }, 3000)
+      }
+    } catch (error) {
+      console.error('Error duplicating service:', error)
+      alert('Error duplicating service. Please try again.')
+    }
+  }, [flowHook])
+
+  // Toggle auto-save
+  const handleToggleAutoSave = useCallback(() => {
+    if (flowHook.autoSaveEnabled) {
+      flowHook.disableAutoSave()
+    } else {
+      flowHook.enableAutoSave()
+    }
+  }, [flowHook])
+
+  // Manual save
+  const handleManualSave = useCallback(async () => {
+    try {
+      await flowHook.saveChanges(true) // Force save
+    } catch (error) {
+      console.error('Error saving manually:', error)
+    }
+  }, [flowHook])
+
+  // Navigation with unsaved changes check
+  const handleNavigation = useCallback((path: string) => {
+    if (flowHook.hasUnsavedChanges) {
+      const shouldSave = window.confirm(
+        'You have unsaved changes that will be lost. Do you want to save before leaving?'
+      )
+      
+      if (shouldSave) {
+        // User wants to save first
+        flowHook.saveChanges(true).then(() => {
+          router.push(path)
+        }).catch((error) => {
+          console.error('Error saving before navigation:', error)
+          alert('Error saving changes. Please try again.')
+        })
+      } else {
+        // User doesn't want to save, navigate anyway
+        const confirmLeave = window.confirm(
+          'Are you sure you want to leave without saving? All changes will be lost.'
+        )
+        if (confirmLeave) {
+          router.push(path)
+        }
+      }
+    } else {
+      // No unsaved changes, navigate normally
+      router.push(path)
+    }
+  }, [flowHook.hasUnsavedChanges, flowHook.saveChanges, router])
+
+  // Atajos de teclado
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const handled = flowHook.handleKeyboardShortcut(event, selectedService)
+      if (handled) {
+        return // El evento fue manejado
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [flowHook, selectedService])
+
+  if (flowHook.loading) {
+    return (
+      <Layout title="Services">
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading services...</p>
+          </div>
+        </div>
+      </Layout>
+    )
+  }
+
+  return (
+    <Layout title={projectName || "Services"}>
+      <div className="h-[calc(100vh-5rem)] flex">
+        {/* React Flow Canvas */}
+        <div className="flex-1 relative">
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={flowHook.onConnect}
+            onNodeClick={onNodeClick}
+            onEdgeClick={onEdgeClick}
+            onNodeDragStart={flowHook.onNodeDragStart}
+            onNodeDragStop={flowHook.onNodeDragStop}
+            nodeTypes={nodeTypes}
+            edgeTypes={edgeTypes}
+            connectionLineType={ConnectionLineType.SmoothStep}
+            defaultEdgeOptions={{
+              type: "smoothstep",
+              animated: false,
+              style: { strokeWidth: 2 },
+              markerEnd: { 
+                type: MarkerType.ArrowClosed,
+                width: 25,
+                height: 25,
+              },
+            }}
+            fitView
+            fitViewOptions={{ padding: 0.1 }}
+          >
+            <Background 
+              gap={20}
+              size={0.8}
+              color="#94a3b8"
+              style={{
+                background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%)',
+                backgroundImage: `
+                  radial-gradient(circle at center, #94a3b8 0.8px, transparent 0.8px)
+                `,
+                backgroundSize: '20px 20px'
+              }}
+            />
+            <Controls />
+            <MiniMap
+              nodeStrokeColor={(node) => {
+                const service = node.data as Service
+                if (!service) return '#6b7280'
+                
+                switch (service.type?.toLowerCase()) {
+                  case 'api gateway':
+                  case 'gateway':
+                    return '#7c3aed' // purple-600
+                  case 'api':
+                    return '#2563eb' // blue-600
+                  case 'db':
+                  case 'database':
+                    return '#059669' // emerald-600
+                  case 'web':
+                  case 'web service':
+                    return '#7c3aed' // violet-600
+                  case 'queue':
+                  case 'message queue':
+                    return '#ea580c' // orange-600
+                  case 'cache':
+                    return '#dc2626' // red-600
+                  case 'storage':
+                  case 'storage/file':
+                    return '#d97706' // amber-600
+                  case 'auth':
+                  case 'auth/security':
+                    return '#4f46e5' // indigo-600
+                  case 'monitoring':
+                  case 'monitoring/logs':
+                    return '#0d9488' // teal-600
+                  default:
+                    return '#6b7280' // gray-500
+                }
+              }}
+              nodeColor={(node) => {
+                const service = node.data as Service
+                if (!service) return '#f3f4f6'
+                
+                const isActive = service.status === 'active'
+                
+                switch (service.type?.toLowerCase()) {
+                  case 'api gateway':
+                  case 'gateway':
+                    return isActive ? '#f3e8ff' : '#fee2e2' // purple-100 or red-100
+                  case 'api':
+                    return isActive ? '#dbeafe' : '#fee2e2' // blue-100 or red-100
+                  case 'db':
+                  case 'database':
+                    return isActive ? '#d1fae5' : '#fee2e2' // emerald-100 or red-100
+                  case 'web':
+                  case 'web service':
+                    return isActive ? '#e9d5ff' : '#fee2e2' // violet-100 or red-100
+                  case 'queue':
+                  case 'message queue':
+                    return isActive ? '#fed7aa' : '#fee2e2' // orange-100 or red-100
+                  case 'cache':
+                    return isActive ? '#fecaca' : '#fee2e2' // red-100 or red-100
+                  case 'storage':
+                  case 'storage/file':
+                    return isActive ? '#fef3c7' : '#fee2e2' // amber-100 or red-100
+                  case 'auth':
+                  case 'auth/security':
+                    return isActive ? '#e0e7ff' : '#fee2e2' // indigo-100 or red-100
+                  case 'monitoring':
+                  case 'monitoring/logs':
+                    return isActive ? '#ccfbf1' : '#fee2e2' // teal-100 or red-100
+                  default:
+                    return isActive ? '#f3f4f6' : '#fee2e2' // gray-100 or red-100
+                }
+              }}
+              nodeBorderRadius={10}
+              nodeStrokeWidth={2}
+              position="bottom-right"
+              style={{
+                width: 220,
+                height: 160,
+                border: '2px solid #e5e7eb',
+                borderRadius: '16px',
+                background: 'rgba(255, 255, 255, 0.98)',
+                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                backdropFilter: 'blur(8px)',
+                overflow: 'hidden',
+              }}
+              maskColor="rgba(79, 70, 229, 0.15)"
+              maskStrokeColor="#4f46e5"
+              maskStrokeWidth={2}
+              pannable
+              zoomable
+              inversePan={false}
+              zoomStep={10}
+            />
+            <ConnectionStyles />
+
+            {/* MiniMap Legend Overlay */}
+            <div className="absolute bottom-[200px] right-5 bg-white/95 backdrop-blur-sm border-2 border-gray-200 rounded-xl shadow-lg px-3 z-10 py-2">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full animate-pulse"></div>
+                <span className="text-xs font-semibold text-gray-700">Service Types</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 bg-gradient-to-br from-purple-500 to-pink-500 rounded border border-purple-600 shadow-sm"></div>
+                  <span className="text-gray-600 font-medium">Gateway</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 bg-blue-500 rounded border border-blue-600"></div>
+                  <span className="text-gray-600">API</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 bg-emerald-500 rounded border border-emerald-600"></div>
+                  <span className="text-gray-600">DB</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 bg-violet-500 rounded border border-violet-600"></div>
+                  <span className="text-gray-600">Web</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 bg-orange-500 rounded border border-orange-600"></div>
+                  <span className="text-gray-600">Queue</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 bg-red-500 rounded border border-red-600"></div>
+                  <span className="text-gray-600">Cache</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 bg-amber-500 rounded border border-amber-600"></div>
+                  <span className="text-gray-600">Storage</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 bg-indigo-500 rounded border border-indigo-600"></div>
+                  <span className="text-gray-600">Auth</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 bg-teal-500 rounded border border-teal-600"></div>
+                  <span className="text-gray-600">Monitor</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Header Controls Overlay */}
+            <div className="absolute top-4 left-4 z-10 flex items-center gap-3 bg-white/95 backdrop-blur-sm rounded-xl border shadow-lg p-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleNavigation('/dashboard/projects')}
+                className="hover:bg-gray-50"
+              >
+                <ArrowLeft size={14} className="mr-1" />
+                Back to Projects
+              </Button>
+              <div className="border-l pl-3">
+                <h1 className="text-sm font-semibold text-gray-900">{projectName}</h1>
+                <p className="text-xs text-muted-foreground">
+                  {flowHook.services.length} services, {flowHook.dependencies.length} dependencies
+                </p>
+              </div>
+              {flowHook.copiedService && (
+                <div className="border-l pl-3">
+                  <div className="flex items-center gap-2 text-xs text-blue-600">
+                    <Copy size={12} />
+                    <span>"{flowHook.copiedService.name}" copied</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Press Ctrl+V to paste</p>
+                </div>
+              )}
+            </div>
+
+            {/* Sidebar Toggle Overlay */}
+            <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+              <CompactSaveStatus
+                isDirty={flowHook.isDirty}
+                lastSaved={flowHook.lastSaved}
+                savingInProgress={flowHook.savingInProgress}
+                autoSaveEnabled={flowHook.autoSaveEnabled}
+                autoSaveCountdown={flowHook.autoSaveCountdown}
+                hasUnsavedChanges={flowHook.hasUnsavedChanges}
+                error={flowHook.error}
+                onSave={handleManualSave}
+                onToggleAutoSave={handleToggleAutoSave}
+                className="bg-white/95 backdrop-blur-sm rounded-lg border shadow-lg px-3 py-2"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowComments(!showComments)}
+                className="bg-white/95 backdrop-blur-sm hover:bg-gray-50 shadow-lg"
+                title={showComments ? "Hide Comments" : "Show Comments"}
+              >
+                <MessageCircle size={16} className="mr-2" />
+                Comments
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  console.log('Toggling sidebar from', rightSidebarOpen, 'to', !rightSidebarOpen)
+                  setRightSidebarOpen(!rightSidebarOpen)
+                }}
+                className="bg-white/95 backdrop-blur-sm hover:bg-gray-50 shadow-lg"
+                title={rightSidebarOpen ? "Hide Panel" : "Show Panel"}
+              >
+                {rightSidebarOpen ? (
+                  <PanelRightClose size={16} className="mr-2" />
+                ) : (
+                  <PanelRightOpen size={16} className="mr-2" />
+                )}
+                {rightSidebarOpen ? "Hide Panel" : "Show Panel"}
+              </Button>
+            </div>
+            
+            {/* Legend */}
+            <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm rounded-xl border shadow-xl p-4 max-w-xs z-10">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
+                <h4 className="text-sm font-bold text-gray-800">Connection Types</h4>
+              </div>
+              <p className="text-xs text-gray-500 mb-3">Click on connections to edit them</p>
+              
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-0.5 bg-blue-500 rounded-full shadow-sm"></div>
+                  <span className="text-gray-700 font-medium">HTTP/REST</span>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-0.5 bg-purple-500 rounded-full shadow-sm"></div>
+                  <span className="text-gray-700 font-medium">gRPC</span>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-0.5 bg-pink-500 rounded-full shadow-sm"></div>
+                  <span className="text-gray-700 font-medium">GraphQL</span>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-0.5 bg-green-500 rounded-full shadow-sm"></div>
+                  <span className="text-gray-700 font-medium">Database</span>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-0.5 bg-orange-500 border-dashed border-t border-orange-600 rounded-sm"></div>
+                  <span className="text-gray-700 font-medium">Message Queue</span>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-0.5 bg-cyan-500 border-dotted border-t border-cyan-600 rounded-sm"></div>
+                  <span className="text-gray-700 font-medium">WebSocket</span>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-0.5 bg-amber-600 rounded-full shadow-sm"></div>
+                  <span className="text-gray-700 font-medium">File System</span>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-0.5 bg-red-500 rounded-full shadow-sm"></div>
+                  <span className="text-gray-700 font-medium">Cache</span>
+                </div>
+              </div>
+              
+              <div className="mt-3 pt-2 border-t border-gray-100">
+                <p className="text-xs text-gray-400 text-center">Drag nodes to reposition • Click to select</p>
+              </div>
+            </div>
+          </ReactFlow>
+
+          {/* Notification */}
+          {showNotification && lastConnection && (
+            <ConnectionNotification
+              show={showNotification}
+              sourceNode={lastConnection.source}
+              targetNode={lastConnection.target}
+              onClose={() => setShowNotification(false)}
+              onEdit={() => {}}
+            />
+          )}
+        </div>
+
+        {/* Sidebar - Now on the right */}
+        <div className={`bg-gray-50 border-l flex flex-col h-full transition-all duration-300 ease-in-out ${
+          rightSidebarOpen ? 'w-80 opacity-100' : 'w-0 opacity-0'
+        }`} style={{ 
+          transform: rightSidebarOpen ? 'translateX(0)' : 'translateX(100%)',
+          width: rightSidebarOpen ? '320px' : '0px',
+          overflow: 'hidden'
+        }}>
+          {rightSidebarOpen && (
+            <>
+              <div className="p-4 border-b bg-white flex-shrink-0 space-y-3">
+                <Button 
+                  onClick={() => setShowServiceForm(true)} 
+                  className="w-full bg-blue-600 hover:bg-blue-700"
+                >
+                  <Plus size={16} className="mr-2" />
+                  Add Service
+                </Button>
+                
+                {/* Undo/Redo buttons */}
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={() => flowHook.undo()} 
+                      variant="outline"
+                      size="sm"
+                      disabled={!flowHook.canUndo()}
+                      className="flex-1 border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="Undo (Ctrl+Z)"
+                    >
+                      <Undo2 size={14} className="mr-1" />
+                      Undo
+                    </Button>
+                    <Button 
+                      onClick={() => flowHook.redo()} 
+                      variant="outline"
+                      size="sm"
+                      disabled={!flowHook.canRedo()}
+                      className="flex-1 border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="Redo (Ctrl+Shift+Z)"
+                    >
+                      <Redo2 size={14} className="mr-1" />
+                      Redo
+                    </Button>
+                  </div>
+                  {/* History indicator */}
+                  <div className="text-xs text-gray-500 text-center space-y-1">
+                    <div>Keyboard shortcuts: Ctrl+C (copy), Ctrl+V (paste)</div>
+                    <div>Ctrl+Z (undo), Ctrl+Shift+Z (redo)</div>
+                  </div>
+                </div>
+                
+                {flowHook.copiedService && (
+                  <Button 
+                    onClick={() => flowHook.pasteService()} 
+                    variant="outline"
+                    className="w-full border-blue-200 text-blue-600 hover:bg-blue-50"
+                  >
+                    <Files size={16} className="mr-2" />
+                    Paste "{flowHook.copiedService.name}"
+                  </Button>
+                )}
+              </div>
+
+              <Tabs defaultValue="services" className="flex-1 flex flex-col overflow-hidden">
+                <TabsList className="mx-4 mt-4 grid w-auto grid-cols-2 flex-shrink-0">
+                  <TabsTrigger value="services">Services</TabsTrigger>
+                  <TabsTrigger value="dependencies">Dependencies</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="services" className="flex-1 overflow-hidden mt-4">
+                  <div className="relative h-full">
+                    <ScrollArea className="h-full px-4">
+                      <div className="space-y-3 pb-4">
+                        {flowHook.services.map((service) => {
+                          const serviceColors = getServiceTypeColors(service.type)
+                          return (
+                            <Card 
+                              key={service.id} 
+                              className={`cursor-pointer transition-all duration-200 hover:shadow-md border-2 ${
+                                selectedService?.id === service.id 
+                                  ? 'ring-2 ring-blue-500 bg-blue-50' 
+                                  : `${serviceColors.background} ${serviceColors.border} hover:opacity-80`
+                              }`}
+                              onClick={() => setSelectedService(service)}
+                            >
+                              <CardContent className="p-4">
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="flex items-center gap-3">
+                                    <div className={`w-3 h-3 rounded-full ${
+                                      service.status === 'active' ? 'bg-green-500' : 'bg-red-500'
+                                    }`} />
+                                    <div className={serviceColors.icon}>
+                                      {getServiceIcon(service.type)}
+                                    </div>
+                                    <span className="font-semibold text-sm">{service.name}</span>
+                                  </div>
+                                  <Badge 
+                                    variant="outline" 
+                                    className={`text-xs ${serviceColors.badge} border-current`}
+                                  >
+                                    {service.type}
+                                  </Badge>
+                                </div>
+                                {service.description && (
+                                  <p className="text-xs text-muted-foreground truncate">
+                                    {service.description}
+                                  </p>
+                                )}
+                                <div className="flex gap-1 mt-2">
+                                  <Badge 
+                                    variant="secondary" 
+                                    className={`text-xs ${
+                                      service.environment === 'production' 
+                                        ? 'bg-red-100 text-red-800' 
+                                        : 'bg-yellow-100 text-yellow-800'
+                                    }`}
+                                  >
+                                    {service.environment}
+                                  </Badge>
+                                  {service.language && (
+                                    <Badge variant="outline" className="text-xs bg-white/50">
+                                      {service.language}
+                                    </Badge>
+                                  )}
+                                </div>
+                              </CardContent>
+                            </Card>
+                          )
+                        })}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="dependencies" className="flex-1 overflow-hidden mt-4">
+                  <div className="relative h-full">
+                    <ScrollArea className="h-full px-4">
+                      <div className="space-y-3 pb-4">
+                        {flowHook.dependencies.map((dependency) => {
+                          const sourceService = flowHook.services.find(s => s.id === dependency.source_id)
+                          const targetService = flowHook.services.find(s => s.id === dependency.target_id)
+                          const dependencyColors = getDependencyTypeColors(dependency.protocol || 'HTTP', dependency.type || '')
+                          
+                          return (
+                            <Card 
+                              key={dependency.id}
+                              className={`cursor-pointer transition-all duration-200 hover:shadow-md border-2 ${
+                                selectedDependency?.id === dependency.id 
+                                  ? 'ring-2 ring-blue-500 bg-blue-50' 
+                                  : `${dependencyColors.background} ${dependencyColors.border} hover:opacity-80`
+                              }`}
+                              onClick={() => {
+                                setSelectedDependency(dependency)
+                                setShowDependencyForm(true)
+                              }}
+                            >
+                              <CardContent className="p-4">
+                                <div className="flex items-center gap-2 text-sm mb-2">
+                                  <span className="font-semibold truncate">{sourceService?.name}</span>
+                                  <ArrowRight 
+                                    size={14} 
+                                    className="flex-shrink-0"
+                                    style={{ color: dependencyColors.color }}
+                                  />
+                                  <span className="font-semibold truncate">{targetService?.name}</span>
+                                </div>
+                                <div className="flex items-center gap-2 mb-2">
+                                  <Badge 
+                                    variant="outline" 
+                                    className="text-xs border-current"
+                                    style={{ 
+                                      color: dependencyColors.color,
+                                      backgroundColor: 'rgba(255, 255, 255, 0.8)'
+                                    }}
+                                  >
+                                    {dependency.protocol || 'HTTP'}
+                                  </Badge>
+                                  <Badge 
+                                    variant="secondary" 
+                                    className="text-xs bg-white/70"
+                                  >
+                                    {dependency.method || 'GET'}
+                                  </Badge>
+                                </div>
+                                {dependency.description && (
+                                  <p className="text-xs text-muted-foreground truncate">
+                                    {dependency.description}
+                                  </p>
+                                )}
+                              </CardContent>
+                            </Card>
+                          )
+                        })}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </>
+          )}
+        </div>
+
+        {/* Details Panel */}
+        {(selectedService || selectedDependency) && (
+          <div className="w-96 border-l bg-white flex flex-col h-full">
+            <ScrollArea className="flex-1">
+              {selectedService && (
+                <div className="p-6">
+                  <div className="flex items-start justify-between mb-6 gap-3">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className={`w-4 h-4 rounded-full flex-shrink-0 ${
+                        selectedService.status === 'active' ? 'bg-green-500' : 'bg-red-500'
+                      }`} />
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-bold text-lg text-gray-900 truncate">Service Details</h3>
+                        <p className="text-sm text-gray-600 truncate" title={selectedService.name}>
+                          {selectedService.name}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 flex-shrink-0">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={() => handleCopyService(selectedService)}
+                        className="hover:bg-blue-50"
+                        title="Copy Service (Ctrl+C)"
+                      >
+                        <Copy size={16} />
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={() => handleDuplicateService(selectedService)}
+                        className="hover:bg-green-50"
+                        title="Duplicate Service"
+                      >
+                        <Files size={16} />
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={() => {
+                          setEditingService(selectedService)
+                          setShowServiceForm(true)
+                        }}
+                        className="hover:bg-blue-50"
+                        title="Edit Service"
+                      >
+                        <Edit size={16} />
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="destructive" 
+                        onClick={() => handleDeleteService(selectedService.id)}
+                        className="hover:bg-red-600"
+                        title="Delete Service"
+                      >
+                        <Trash2 size={16} />
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        onClick={() => setSelectedService(null)}
+                        className="hover:bg-gray-100"
+                        title="Close"
+                      >
+                        <X size={16} />
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-6">
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Server className="w-4 h-4 text-blue-600" />
+                        <label className="text-sm font-semibold text-gray-700">Name</label>
+                      </div>
+                      <p className="text-base font-medium text-gray-900 break-words" title={selectedService.name}>
+                        {selectedService.name}
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Settings className="w-4 h-4 text-gray-600" />
+                          <label className="text-sm font-semibold text-gray-700">Type</label>
+                        </div>
+                        <Badge variant="outline" className="font-medium">
+                          {selectedService.type}
+                        </Badge>
+                      </div>
+
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Activity className="w-4 h-4 text-gray-600" />
+                          <label className="text-sm font-semibold text-gray-700">Status</label>
+                        </div>
+                        <Badge 
+                          variant={selectedService.status === 'active' ? 'default' : 'secondary'}
+                          className={selectedService.status === 'active' ? 'bg-green-600' : ''}
+                        >
+                          {selectedService.status}
+                        </Badge>
+                      </div>
+                    </div>
+
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Globe className="w-4 h-4 text-purple-600" />
+                        <label className="text-sm font-semibold text-gray-700">Environment</label>
+                      </div>
+                      <Badge 
+                        variant="outline"
+                        className={`font-medium ${
+                          selectedService.environment === 'production' 
+                            ? 'bg-red-100 text-red-800 border-red-200' 
+                            : 'bg-yellow-100 text-yellow-800 border-yellow-200'
+                        }`}
+                      >
+                        {selectedService.environment}
+                      </Badge>
+                    </div>
+
+                    {selectedService.description && (
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Eye className="w-4 h-4 text-gray-600" />
+                          <label className="text-sm font-semibold text-gray-700">Description</label>
+                        </div>
+                        <p className="text-sm text-gray-800 leading-relaxed">{selectedService.description}</p>
+                      </div>
+                    )}
+
+                    {(selectedService.language || selectedService.version) && (
+                      <div className="grid grid-cols-2 gap-4">
+                        {selectedService.language && (
+                          <div className="bg-gray-50 rounded-lg p-4">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Zap className="w-4 h-4 text-orange-600" />
+                              <label className="text-sm font-semibold text-gray-700">Language</label>
+                            </div>
+                            <p className="text-sm font-medium text-gray-900">{selectedService.language}</p>
+                          </div>
+                        )}
+                        
+                        {selectedService.version && (
+                          <div className="bg-gray-50 rounded-lg p-4">
+                            <div className="flex items-center gap-2 mb-2">
+                              <GitBranch className="w-4 h-4 text-blue-600" />
+                              <label className="text-sm font-semibold text-gray-700">Version</label>
+                            </div>
+                            <Badge variant="outline" className="font-medium">
+                              v{selectedService.version}
+                            </Badge>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Git Repository */}
+                    {selectedService.git_repo && (
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <GitBranch className="w-4 h-4 text-gray-600" />
+                          <label className="text-sm font-semibold text-gray-700">Git Repository</label>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <code className="text-sm bg-gray-100 px-2 py-1 rounded text-gray-800 flex-1 break-all min-w-0 overflow-hidden">
+                            {selectedService.git_repo}
+                          </code>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => window.open(selectedService.git_repo, '_blank')}
+                            className="flex-shrink-0"
+                            title="Open Repository"
+                          >
+                            <ExternalLink size={14} />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Deploy URL */}
+                    {selectedService.deploy_url && (
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Monitor className="w-4 h-4 text-green-600" />
+                          <label className="text-sm font-semibold text-gray-700">Deploy URL</label>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <code className="text-sm bg-gray-100 px-2 py-1 rounded text-gray-800 flex-1 break-all min-w-0 overflow-hidden">
+                            {selectedService.deploy_url}
+                          </code>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => window.open(selectedService.deploy_url, '_blank')}
+                            className="flex-shrink-0"
+                            title="Open Deploy URL"
+                          >
+                            <ExternalLink size={14} />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Domain */}
+                    {selectedService.domain && (
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Globe className="w-4 h-4 text-blue-600" />
+                          <label className="text-sm font-semibold text-gray-700">Domain</label>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <code className="text-sm bg-gray-100 px-2 py-1 rounded text-gray-800 flex-1 break-all min-w-0 overflow-hidden">
+                            {selectedService.domain}
+                          </code>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => window.open(`https://${selectedService.domain}`, '_blank')}
+                            className="flex-shrink-0"
+                            title="Open Domain"
+                          >
+                            <ExternalLink size={14} />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Notes */}
+                    {selectedService.notes && (
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <FileText className="w-4 h-4 text-gray-600" />
+                          <label className="text-sm font-semibold text-gray-700">Notes</label>
+                        </div>
+                        <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">{selectedService.notes}</p>
+                      </div>
+                    )}
+
+                    {/* Health Metrics */}
+                    {selectedService.health_metrics && (
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Activity className="w-4 h-4 text-green-600" />
+                          <label className="text-sm font-semibold text-gray-700">Health Metrics</label>
+                        </div>
+                        <div className="bg-gray-100 rounded p-3">
+                          <pre className="text-xs text-gray-800 overflow-x-auto">
+                            {JSON.stringify(selectedService.health_metrics, null, 2)}
+                          </pre>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Metadata */}
+                    {selectedService.metadata && (
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Hash className="w-4 h-4 text-purple-600" />
+                          <label className="text-sm font-semibold text-gray-700">Metadata</label>
+                        </div>
+                        <div className="bg-gray-100 rounded p-3">
+                          <pre className="text-xs text-gray-800 overflow-x-auto">
+                            {JSON.stringify(selectedService.metadata, null, 2)}
+                          </pre>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Created/Updated Info */}
+                    <div className="grid grid-cols-1 gap-4">
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Calendar className="w-4 h-4 text-gray-600" />
+                          <label className="text-sm font-semibold text-gray-700">Created</label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-3 h-3 text-gray-500" />
+                          <span className="text-xs text-gray-600">
+                            {new Date(selectedService.created_at).toLocaleDateString()} at {new Date(selectedService.created_at).toLocaleTimeString()}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 mt-1">
+                          <User className="w-3 h-3 text-gray-500" />
+                          <span className="text-xs text-gray-600">
+                            ID: {selectedService.created_by}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Calendar className="w-4 h-4 text-gray-600" />
+                          <label className="text-sm font-semibold text-gray-700">Last Updated</label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-3 h-3 text-gray-500" />
+                          <span className="text-xs text-gray-600">
+                            {new Date(selectedService.updated_at).toLocaleDateString()} at {new Date(selectedService.updated_at).toLocaleTimeString()}
+                          </span>
+                        </div>
+                        {selectedService.updated_by && (
+                          <div className="flex items-center gap-2 mt-1">
+                            <User className="w-3 h-3 text-gray-500" />
+                            <span className="text-xs text-gray-600">
+                              ID: {selectedService.updated_by}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {selectedDependency && (
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-3">
+                      <Link className="w-5 h-5 text-blue-600" />
+                      <h3 className="font-bold text-lg text-gray-900">Dependency Details</h3>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => handleDeleteDependency(selectedDependency.id)}
+                        className="hover:bg-red-600"
+                      >
+                        <Trash2 size={16} />
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        onClick={() => setSelectedDependency(null)}
+                        className="hover:bg-gray-100"
+                        title="Close"
+                      >
+                        <X size={16} />
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-6">
+                    <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4 border border-blue-200">
+                      <div className="flex items-center gap-2 mb-3">
+                        <ArrowRight className="w-4 h-4 text-blue-600" />
+                        <label className="text-sm font-semibold text-gray-700">Connection Flow</label>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="bg-white rounded-lg px-3 py-2 border">
+                          <p className="text-sm font-semibold text-gray-900">
+                            {flowHook.services.find(s => s.id === selectedDependency.source_id)?.name}
+                          </p>
+                        </div>
+                        <ArrowRight className="w-5 h-5 text-blue-600" />
+                        <div className="bg-white rounded-lg px-3 py-2 border">
+                          <p className="text-sm font-semibold text-gray-900">
+                            {flowHook.services.find(s => s.id === selectedDependency.target_id)?.name}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Globe className="w-4 h-4 text-green-600" />
+                          <label className="text-sm font-semibold text-gray-700">Protocol</label>
+                        </div>
+                        <Badge variant="outline" className="font-medium bg-green-100 text-green-800 border-green-200">
+                          {selectedDependency.protocol || 'HTTP'}
+                        </Badge>
+                      </div>
+
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Zap className="w-4 h-4 text-orange-600" />
+                          <label className="text-sm font-semibold text-gray-700">Method</label>
+                        </div>
+                        <Badge variant="secondary" className="font-medium">
+                          {selectedDependency.method || 'GET'}
+                        </Badge>
+                      </div>
+                    </div>
+
+                    {/* Type */}
+                    {selectedDependency.type && (
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Settings className="w-4 h-4 text-gray-600" />
+                          <label className="text-sm font-semibold text-gray-700">Type</label>
+                        </div>
+                        <Badge variant="outline" className="font-medium">
+                          {selectedDependency.type}
+                        </Badge>
+                      </div>
+                    )}
+
+                    {selectedDependency.description && (
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Eye className="w-4 h-4 text-gray-600" />
+                          <label className="text-sm font-semibold text-gray-700">Description</label>
+                        </div>
+                        <p className="text-sm text-gray-800 leading-relaxed">{selectedDependency.description}</p>
+                      </div>
+                    )}
+
+                    {/* Created/Updated Info */}
+                    <div className="grid grid-cols-1 gap-4">
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Calendar className="w-4 h-4 text-gray-600" />
+                          <label className="text-sm font-semibold text-gray-700">Created</label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-3 h-3 text-gray-500" />
+                          <span className="text-xs text-gray-600">
+                            {new Date(selectedDependency.created_at).toLocaleDateString()} at {new Date(selectedDependency.created_at).toLocaleTimeString()}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 mt-1">
+                          <User className="w-3 h-3 text-gray-500" />
+                          <span className="text-xs text-gray-600">
+                            ID: {selectedDependency.created_by}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Calendar className="w-4 h-4 text-gray-600" />
+                          <label className="text-sm font-semibold text-gray-700">Last Updated</label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-3 h-3 text-gray-500" />
+                          <span className="text-xs text-gray-600">
+                            {new Date(selectedDependency.updated_at).toLocaleDateString()} at {new Date(selectedDependency.updated_at).toLocaleTimeString()}
+                          </span>
+                        </div>
+                        {selectedDependency.updated_by && (
+                          <div className="flex items-center gap-2 mt-1">
+                            <User className="w-3 h-3 text-gray-500" />
+                            <span className="text-xs text-gray-600">
+                              ID: {selectedDependency.updated_by}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </ScrollArea>
+          </div>
+        )}
+      </div>
+
+      {/* Dialogs */}
+      <ServiceDialog
+        open={showServiceForm}
+        onOpenChange={setShowServiceForm}
+        onSave={handleSaveService}
+        service={editingService}
+      />
+
+      <DependencyDialog
+        open={showDependencyForm}
+        onOpenChange={setShowDependencyForm}
+        onSave={handleSaveDependency}
+        onDelete={handleDeleteDependency}
+        services={flowHook.services}
+        dependency={selectedDependency}
+      />
+
+              {/* Project Comments Panel */}
+        <ProjectCommentsPanel 
+          projectId={projectId} 
+          serviceId={selectedService?.id}
+          isOpen={showComments}
+          onToggle={() => setShowComments(!showComments)}
+          className="fixed bottom-4 right-4 z-50 shadow-xl"
+        />
+    </Layout>
+  )
+}
+
+export default function ServicesPageOptimized() {
+  return (
+    <ReactFlowProvider>
+      <ServiceDependencyFlow />
+    </ReactFlowProvider>
+  )
+} 
