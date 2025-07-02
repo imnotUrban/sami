@@ -68,7 +68,6 @@ import { useServicesFlow } from "@/lib/use-services-flow"
 import { type Service, type Dependency } from "@/lib/services-api"
 import { SaveStatusIndicator, CompactSaveStatus } from "@/components/save-status-indicator"
 import Layout from "@/components/Layout"
-import { ProjectCommentsPanel } from "@/components/project-comments-panel"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -578,6 +577,15 @@ const backgroundStyles: Record<string, BackgroundStyle> = {
   },
 }
 
+// Helper functions for type-safe comparisons
+const isServiceSelected = (selectedService: Service | null, service: Service): boolean => {
+  return selectedService?.id === service.id
+}
+
+const isDependencySelected = (selectedDependency: Dependency | null, dependency: Dependency): boolean => {
+  return selectedDependency?.id === dependency.id
+}
+
 function ServiceDependencyFlow() {
   const params = useParams()
   const router = useRouter()
@@ -589,23 +597,27 @@ function ServiceDependencyFlow() {
   // Background selection state
   const [selectedBackground, setSelectedBackground] = useState<string>('gradient')
   
-  // Connection Types legend state
-  const [showConnectionTypes, setShowConnectionTypes] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('sami-show-connection-types')
-      return saved !== null ? JSON.parse(saved) : true
-    }
-    return true
-  })
+  // Connection Types legend state - Initialize without localStorage to avoid hydration mismatch
+  const [showConnectionTypes, setShowConnectionTypes] = useState<boolean>(true)
   
-  // Service Types legend state
-  const [showServiceTypes, setShowServiceTypes] = useState<boolean>(() => {
+  // Service Types legend state - Initialize without localStorage to avoid hydration mismatch
+  const [showServiceTypes, setShowServiceTypes] = useState<boolean>(true)
+  
+  // Initialize states from localStorage after hydration
+  useEffect(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('sami-show-service-types')
-      return saved !== null ? JSON.parse(saved) : true
+      const savedConnectionTypes = localStorage.getItem('sami-show-connection-types')
+      const savedServiceTypes = localStorage.getItem('sami-show-service-types')
+      
+      if (savedConnectionTypes !== null) {
+        setShowConnectionTypes(JSON.parse(savedConnectionTypes))
+      }
+      
+      if (savedServiceTypes !== null) {
+        setShowServiceTypes(JSON.parse(savedServiceTypes))
+      }
     }
-    return true
-  })
+  }, [])
   
   // Save connection types visibility state
   useEffect(() => {
@@ -683,7 +695,6 @@ function ServiceDependencyFlow() {
   const [showNotification, setShowNotification] = useState(false)
   const [lastConnection, setLastConnection] = useState<{ source: string; target: string } | null>(null)
   const [rightSidebarOpen, setRightSidebarOpen] = useState(true) // Right sidebar visibility state
-  const [showComments, setShowComments] = useState(false) // Comments panel visibility
 
   // Sync flow nodes/edges with hook data
   useEffect(() => {
@@ -1204,29 +1215,19 @@ function ServiceDependencyFlow() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setShowComments(!showComments)}
-                className="bg-white/95 backdrop-blur-sm hover:bg-gray-50 shadow-lg"
-                title={showComments ? "Hide Comments" : "Show Comments"}
-              >
-                <MessageCircle size={16} className="mr-2" />
-                Comments
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
                 onClick={() => {
                   console.log('Toggling sidebar from', rightSidebarOpen, 'to', !rightSidebarOpen)
                   setRightSidebarOpen(!rightSidebarOpen)
                 }}
                 className="bg-white/95 backdrop-blur-sm hover:bg-gray-50 shadow-lg"
-                title={rightSidebarOpen ? "Hide Panel" : "Show Panel"}
+                title={rightSidebarOpen ? "Hide" : "Show"}
               >
                 {rightSidebarOpen ? (
                   <PanelRightClose size={16} className="mr-2" />
                 ) : (
                   <PanelRightOpen size={16} className="mr-2" />
                 )}
-                {rightSidebarOpen ? "Hide Panel" : "Show Panel"}
+                {rightSidebarOpen ? "Hide" : "Show"}
               </Button>
             </div>
             
@@ -1320,7 +1321,7 @@ function ServiceDependencyFlow() {
           )}
         </div>
 
-        {/* Sidebar - Now on the right */}
+        {/* Unified Sidebar */}
         <div className={`bg-gray-50 border-l flex flex-col h-full transition-all duration-300 ease-in-out ${
           rightSidebarOpen ? 'w-80 opacity-100' : 'w-0 opacity-0'
         }`} style={{ 
@@ -1330,167 +1331,186 @@ function ServiceDependencyFlow() {
         }}>
           {rightSidebarOpen && (
             <>
-              <div className="p-4 border-b bg-white flex-shrink-0 space-y-3">
+              {/* Action Buttons Section */}
+              <div className="p-3 border-b bg-white flex-shrink-0 space-y-2">
+                {/* Navigation submenu */}
+                {(selectedService || selectedDependency) && (
+                  <div className="flex items-center justify-between mb-2 pb-2 border-b border-gray-100">
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedService(null)
+                          setSelectedDependency(null)
+                        }}
+                        className="h-6 px-2 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                      >
+                        <ArrowLeft size={12} className="mr-1" />
+                        Back to List
+                      </Button>
+                      <div className="text-xs text-gray-400">|</div>
+                      <div className="flex items-center gap-1 text-xs text-gray-600">
+                        {selectedService && (
+                          <>
+                            <Server size={10} />
+                            <span>Service: {selectedService.name}</span>
+                          </>
+                        )}
+                        {selectedDependency && (
+                          <>
+                            <Link size={10} />
+                            <span>Dependency: {flowHook.services.find(s => s.id === selectedDependency.source_id)?.name} → {flowHook.services.find(s => s.id === selectedDependency.target_id)?.name}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
                 <Button 
                   onClick={() => setShowServiceForm(true)} 
-                  className="w-full bg-blue-600 hover:bg-blue-700"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-sm py-2"
+                  size="sm"
                 >
-                  <Plus size={16} className="mr-2" />
+                  <Plus size={14} className="mr-1" />
                   Add Service
                 </Button>
                 
                 {/* Undo/Redo buttons */}
-                <div className="space-y-2">
-                  <div className="flex gap-2">
-                    <Button 
-                      onClick={() => flowHook.undo()} 
-                      variant="outline"
-                      size="sm"
-                      disabled={!flowHook.canUndo()}
-                      className="flex-1 border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                      title="Undo (Ctrl+Z)"
-                    >
-                      <Undo2 size={14} className="mr-1" />
-                      Undo
-                    </Button>
-                    <Button 
-                      onClick={() => flowHook.redo()} 
-                      variant="outline"
-                      size="sm"
-                      disabled={!flowHook.canRedo()}
-                      className="flex-1 border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                      title="Redo (Ctrl+Shift+Z)"
-                    >
-                      <Redo2 size={14} className="mr-1" />
-                      Redo
-                    </Button>
-                  </div>
-                  {/* History indicator */}
-                  <div className="text-xs text-gray-500 text-center space-y-1">
-                    <div>Keyboard shortcuts: Ctrl+C (copy), Ctrl+V (paste)</div>
-                    <div>Ctrl+Z (undo), Ctrl+Shift+Z (redo)</div>
-                  </div>
+                <div className="flex gap-1">
+                  <Button 
+                    onClick={() => flowHook.undo()} 
+                    variant="outline"
+                    size="sm"
+                    disabled={!flowHook.canUndo()}
+                    className="flex-1 border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-xs py-1"
+                    title="Undo (Ctrl+Z)"
+                  >
+                    <Undo2 size={12} className="mr-1" />
+                    Undo
+                  </Button>
+                  <Button 
+                    onClick={() => flowHook.redo()} 
+                    variant="outline"
+                    size="sm"
+                    disabled={!flowHook.canRedo()}
+                    className="flex-1 border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-xs py-1"
+                    title="Redo (Ctrl+Shift+Z)"
+                  >
+                    <Redo2 size={12} className="mr-1" />
+                    Redo
+                  </Button>
                 </div>
                 
                 {flowHook.copiedService && (
                   <Button 
                     onClick={() => flowHook.pasteService()} 
                     variant="outline"
-                    className="w-full border-blue-200 text-blue-600 hover:bg-blue-50"
+                    className="w-full border-blue-200 text-blue-600 hover:bg-blue-50 text-xs py-1"
+                    size="sm"
                   >
-                    <Files size={16} className="mr-2" />
+                    <Files size={12} className="mr-1" />
                     Paste "{flowHook.copiedService.name}"
                   </Button>
                 )}
               </div>
 
-              <Tabs defaultValue="services" className="flex-1 flex flex-col overflow-hidden">
-                <TabsList className="mx-4 mt-4 grid w-auto grid-cols-2 flex-shrink-0">
-                  <TabsTrigger value="services">Services</TabsTrigger>
-                  <TabsTrigger value="dependencies">Dependencies</TabsTrigger>
-                </TabsList>
+              {/* Services and Dependencies List */}
+              {!selectedService && !selectedDependency && (
+                <Tabs defaultValue="services" className="flex-1 flex flex-col overflow-hidden">
+                  <TabsList className="mx-3 mt-2 grid w-auto grid-cols-2 flex-shrink-0 h-8">
+                    <TabsTrigger value="services" className="text-xs">Services</TabsTrigger>
+                    <TabsTrigger value="dependencies" className="text-xs">Dependencies</TabsTrigger>
+                  </TabsList>
 
-                <TabsContent value="services" className="flex-1 overflow-hidden mt-4">
-                  <div className="relative h-full">
-                    <ScrollArea className="h-full px-4">
-                      <div className="space-y-3 pb-4">
-                        {flowHook.services.map((service) => {
-                          const serviceColors = getServiceTypeColors(service.type)
-                          return (
-                            <Card 
-                              key={service.id} 
-                              className={`cursor-pointer transition-all duration-200 hover:shadow-md border-2 ${
-                                selectedService?.id === service.id 
-                                  ? 'ring-2 ring-blue-500 bg-blue-50' 
-                                  : `${serviceColors.background} ${serviceColors.border} hover:opacity-80`
-                              }`}
-                              onClick={() => setSelectedService(service)}
-                            >
-                              <CardContent className="p-4">
-                                <div className="flex items-center justify-between mb-2">
-                                  <div className="flex items-center gap-3">
-                                    <div className={`w-3 h-3 rounded-full ${
+                  <TabsContent value="services" className="flex-1 overflow-hidden mt-2">
+                    <div className="relative h-full">
+                      <ScrollArea className="h-full px-3">
+                        <div className="space-y-2 pb-4">
+                          {flowHook.services.map((service) => {
+                            const serviceColors = getServiceTypeColors(service.type)
+                            return (
+                              <div 
+                                key={service.id} 
+                                className={`cursor-pointer transition-all duration-200 hover:shadow-sm border rounded-lg p-2 ${
+                                  isServiceSelected(selectedService, service) 
+                                    ? 'ring-1 ring-blue-500 bg-blue-50' 
+                                    : `${serviceColors.background} ${serviceColors.border} hover:opacity-80`
+                                }`}
+                                onClick={() => setSelectedService(service)}
+                              >
+                                <div className="flex items-center justify-between mb-1">
+                                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
                                       service.status === 'active' ? 'bg-green-500' : 'bg-red-500'
                                     }`} />
-                                    <div className={serviceColors.icon}>
+                                    <div className={`${serviceColors.icon} flex-shrink-0`}>
                                       {getServiceIcon(service.type)}
                                     </div>
-                                    <span className="font-semibold text-sm">{service.name}</span>
+                                    <span className="font-medium text-xs truncate">{service.name}</span>
                                   </div>
+                                </div>
+                                <div className="flex items-center gap-1">
                                   <Badge 
                                     variant="outline" 
-                                    className={`text-xs ${serviceColors.badge} border-current`}
+                                    className={`text-xs px-1 py-0 h-4 ${serviceColors.badge} border-current`}
                                   >
                                     {service.type}
                                   </Badge>
-                                </div>
-                                {service.description && (
-                                  <p className="text-xs text-muted-foreground truncate">
-                                    {service.description}
-                                  </p>
-                                )}
-                                <div className="flex gap-1 mt-2">
                                   <Badge 
                                     variant="secondary" 
-                                    className={`text-xs ${
+                                    className={`text-xs px-1 py-0 h-4 ${
                                       service.environment === 'production' 
-                                        ? 'bg-red-100 text-red-800' 
-                                        : 'bg-yellow-100 text-yellow-800'
+                                        ? 'bg-red-100 text-red-700' 
+                                        : 'bg-yellow-100 text-yellow-700'
                                     }`}
                                   >
                                     {service.environment}
                                   </Badge>
-                                  {service.language && (
-                                    <Badge variant="outline" className="text-xs bg-white/50">
-                                      {service.language}
-                                    </Badge>
-                                  )}
                                 </div>
-                              </CardContent>
-                            </Card>
-                          )
-                        })}
-                      </div>
-                    </ScrollArea>
-                  </div>
-                </TabsContent>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </ScrollArea>
+                    </div>
+                  </TabsContent>
 
-                <TabsContent value="dependencies" className="flex-1 overflow-hidden mt-4">
-                  <div className="relative h-full">
-                    <ScrollArea className="h-full px-4">
-                      <div className="space-y-3 pb-4">
-                        {flowHook.dependencies.map((dependency) => {
-                          const sourceService = flowHook.services.find(s => s.id === dependency.source_id)
-                          const targetService = flowHook.services.find(s => s.id === dependency.target_id)
-                          const dependencyColors = getDependencyTypeColors(dependency.protocol || 'HTTP', dependency.type || '')
-                          
-                          return (
-                            <Card 
-                              key={dependency.id}
-                              className={`cursor-pointer transition-all duration-200 hover:shadow-md border-2 ${
-                                selectedDependency?.id === dependency.id 
-                                  ? 'ring-2 ring-blue-500 bg-blue-50' 
-                                  : `${dependencyColors.background} ${dependencyColors.border} hover:opacity-80`
-                              }`}
-                              onClick={() => {
-                                setSelectedDependency(dependency)
-                                setShowDependencyForm(true)
-                              }}
-                            >
-                              <CardContent className="p-4">
-                                <div className="flex items-center gap-2 text-sm mb-2">
-                                  <span className="font-semibold truncate">{sourceService?.name}</span>
+                  <TabsContent value="dependencies" className="flex-1 overflow-hidden mt-2">
+                    <div className="relative h-full">
+                      <ScrollArea className="h-full px-3">
+                        <div className="space-y-2 pb-4">
+                          {flowHook.dependencies.map((dependency) => {
+                            const sourceService = flowHook.services.find(s => s.id === dependency.source_id)
+                            const targetService = flowHook.services.find(s => s.id === dependency.target_id)
+                            const dependencyColors = getDependencyTypeColors(dependency.protocol || 'HTTP', dependency.type || '')
+                            
+                            return (
+                              <div 
+                                key={dependency.id}
+                                className={`cursor-pointer transition-all duration-200 hover:shadow-sm border rounded-lg p-2 ${
+                                  isDependencySelected(selectedDependency, dependency) 
+                                    ? 'ring-1 ring-blue-500 bg-blue-50' 
+                                    : `${dependencyColors.background} ${dependencyColors.border} hover:opacity-80`
+                                }`}
+                                onClick={() => {
+                                  setSelectedDependency(dependency)
+                                }}
+                              >
+                                <div className="flex items-center gap-1 text-xs mb-1">
+                                  <span className="font-medium truncate text-xs">{sourceService?.name}</span>
                                   <ArrowRight 
-                                    size={14} 
+                                    size={10} 
                                     className="flex-shrink-0"
                                     style={{ color: dependencyColors.color }}
                                   />
-                                  <span className="font-semibold truncate">{targetService?.name}</span>
+                                  <span className="font-medium truncate text-xs">{targetService?.name}</span>
                                 </div>
-                                <div className="flex items-center gap-2 mb-2">
+                                <div className="flex items-center gap-1">
                                   <Badge 
                                     variant="outline" 
-                                    className="text-xs border-current"
+                                    className="text-xs px-1 py-0 h-4 border-current"
                                     style={{ 
                                       color: dependencyColors.color,
                                       backgroundColor: 'rgba(255, 255, 255, 0.8)'
@@ -1500,489 +1520,496 @@ function ServiceDependencyFlow() {
                                   </Badge>
                                   <Badge 
                                     variant="secondary" 
-                                    className="text-xs bg-white/70"
+                                    className="text-xs px-1 py-0 h-4 bg-white/70"
                                   >
                                     {dependency.method || 'GET'}
                                   </Badge>
                                 </div>
-                                {dependency.description && (
-                                  <p className="text-xs text-muted-foreground truncate">
-                                    {dependency.description}
-                                  </p>
-                                )}
-                              </CardContent>
-                            </Card>
-                          )
-                        })}
-                      </div>
-                    </ScrollArea>
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </>
-          )}
-        </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </ScrollArea>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              )}
 
-        {/* Details Panel */}
-        {(selectedService || selectedDependency) && (
-          <div className="w-96 border-l bg-white flex flex-col h-full">
-            <ScrollArea className="flex-1">
+              {/* Service Details Panel */}
               {selectedService && (
-                <div className="p-6">
-                  <div className="flex items-start justify-between mb-6 gap-3">
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <div className={`w-4 h-4 rounded-full flex-shrink-0 ${
-                        selectedService.status === 'active' ? 'bg-green-500' : 'bg-red-500'
-                      }`} />
-                      <div className="min-w-0 flex-1">
-                        <h3 className="font-bold text-lg text-gray-900 truncate">Service Details</h3>
-                        <p className="text-sm text-gray-600 truncate" title={selectedService.name}>
-                          {selectedService.name}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex gap-2 flex-shrink-0">
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        onClick={() => handleCopyService(selectedService)}
-                        className="hover:bg-blue-50"
-                        title="Copy Service (Ctrl+C)"
-                      >
-                        <Copy size={16} />
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        onClick={() => handleDuplicateService(selectedService)}
-                        className="hover:bg-green-50"
-                        title="Duplicate Service"
-                      >
-                        <Files size={16} />
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        onClick={() => {
-                          setEditingService(selectedService)
-                          setShowServiceForm(true)
-                        }}
-                        className="hover:bg-blue-50"
-                        title="Edit Service"
-                      >
-                        <Edit size={16} />
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant="destructive" 
-                        onClick={() => handleDeleteService(selectedService.id)}
-                        className="hover:bg-red-600"
-                        title="Delete Service"
-                      >
-                        <Trash2 size={16} />
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant="ghost" 
-                        onClick={() => setSelectedService(null)}
-                        className="hover:bg-gray-100"
-                        title="Close"
-                      >
-                        <X size={16} />
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-6">
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Server className="w-4 h-4 text-blue-600" />
-                        <label className="text-sm font-semibold text-gray-700">Name</label>
-                      </div>
-                      <p className="text-base font-medium text-gray-900 break-words" title={selectedService.name}>
-                        {selectedService.name}
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Settings className="w-4 h-4 text-gray-600" />
-                          <label className="text-sm font-semibold text-gray-700">Type</label>
+                <div className="flex-1 overflow-hidden border-t">
+                  <ScrollArea className="h-full">
+                    <div className="p-4">
+                      <div className="flex items-start justify-between mb-4 gap-2">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
+                            selectedService.status === 'active' ? 'bg-green-500' : 'bg-red-500'
+                          }`} />
+                          <div className="min-w-0 flex-1">
+                            <h3 className="font-semibold text-base text-gray-900 truncate">Service Details</h3>
+                            <p className="text-xs text-gray-600 truncate" title={selectedService.name}>
+                              {selectedService.name}
+                            </p>
+                          </div>
                         </div>
-                        <Badge variant="outline" className="font-medium">
-                          {selectedService.type}
-                        </Badge>
-                      </div>
-
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Activity className="w-4 h-4 text-gray-600" />
-                          <label className="text-sm font-semibold text-gray-700">Status</label>
+                        <div className="flex gap-1 flex-shrink-0">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            onClick={() => handleCopyService(selectedService)}
+                            className="hover:bg-blue-50 h-7 w-7 p-0"
+                            title="Copy Service (Ctrl+C)"
+                          >
+                            <Copy size={12} />
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            onClick={() => handleDuplicateService(selectedService)}
+                            className="hover:bg-green-50 h-7 w-7 p-0"
+                            title="Duplicate Service"
+                          >
+                            <Files size={12} />
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            onClick={() => {
+                              setEditingService(selectedService)
+                              setShowServiceForm(true)
+                            }}
+                            className="hover:bg-blue-50 h-7 w-7 p-0"
+                            title="Edit Service"
+                          >
+                            <Edit size={12} />
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="destructive" 
+                            onClick={() => handleDeleteService(selectedService.id)}
+                            className="hover:bg-red-600 h-7 w-7 p-0"
+                            title="Delete Service"
+                          >
+                            <Trash2 size={12} />
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            onClick={() => setSelectedService(null)}
+                            className="hover:bg-gray-100 h-7 w-7 p-0"
+                            title="Close"
+                          >
+                            <X size={12} />
+                          </Button>
                         </div>
-                        <Badge 
-                          variant={selectedService.status === 'active' ? 'default' : 'secondary'}
-                          className={selectedService.status === 'active' ? 'bg-green-600' : ''}
-                        >
-                          {selectedService.status}
-                        </Badge>
                       </div>
-                    </div>
-
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Globe className="w-4 h-4 text-purple-600" />
-                        <label className="text-sm font-semibold text-gray-700">Environment</label>
-                      </div>
-                      <Badge 
-                        variant="outline"
-                        className={`font-medium ${
-                          selectedService.environment === 'production' 
-                            ? 'bg-red-100 text-red-800 border-red-200' 
-                            : 'bg-yellow-100 text-yellow-800 border-yellow-200'
-                        }`}
-                      >
-                        {selectedService.environment}
-                      </Badge>
-                    </div>
-
-                    {selectedService.description && (
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Eye className="w-4 h-4 text-gray-600" />
-                          <label className="text-sm font-semibold text-gray-700">Description</label>
+                      
+                      <div className="space-y-3">
+                        <div className="bg-gray-50 rounded-md p-3">
+                          <div className="flex items-center gap-1 mb-1">
+                            <Server className="w-3 h-3 text-blue-600" />
+                            <label className="text-xs font-medium text-gray-700">Name</label>
+                          </div>
+                          <p className="text-sm font-medium text-gray-900 break-words" title={selectedService.name}>
+                            {selectedService.name}
+                          </p>
                         </div>
-                        <p className="text-sm text-gray-800 leading-relaxed">{selectedService.description}</p>
-                      </div>
-                    )}
 
-                    {(selectedService.language || selectedService.version) && (
-                      <div className="grid grid-cols-2 gap-4">
-                        {selectedService.language && (
-                          <div className="bg-gray-50 rounded-lg p-4">
-                            <div className="flex items-center gap-2 mb-2">
-                              <Zap className="w-4 h-4 text-orange-600" />
-                              <label className="text-sm font-semibold text-gray-700">Language</label>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="bg-gray-50 rounded-md p-3">
+                            <div className="flex items-center gap-1 mb-1">
+                              <Settings className="w-3 h-3 text-gray-600" />
+                              <label className="text-xs font-medium text-gray-700">Type</label>
                             </div>
-                            <p className="text-sm font-medium text-gray-900">{selectedService.language}</p>
+                            <Badge variant="outline" className="text-xs h-5 px-2">
+                              {selectedService.type}
+                            </Badge>
+                          </div>
+
+                          <div className="bg-gray-50 rounded-md p-3">
+                            <div className="flex items-center gap-1 mb-1">
+                              <Activity className="w-3 h-3 text-gray-600" />
+                              <label className="text-xs font-medium text-gray-700">Status</label>
+                            </div>
+                            <Badge 
+                              variant={selectedService.status === 'active' ? 'default' : 'secondary'}
+                              className={`text-xs h-5 px-2 ${selectedService.status === 'active' ? 'bg-green-600' : ''}`}
+                            >
+                              {selectedService.status}
+                            </Badge>
+                          </div>
+                        </div>
+
+                        <div className="bg-gray-50 rounded-md p-3">
+                          <div className="flex items-center gap-1 mb-1">
+                            <Globe className="w-3 h-3 text-purple-600" />
+                            <label className="text-xs font-medium text-gray-700">Environment</label>
+                          </div>
+                          <Badge 
+                            variant="outline"
+                            className={`text-xs h-5 px-2 ${
+                              selectedService.environment === 'production' 
+                                ? 'bg-red-100 text-red-800 border-red-200' 
+                                : 'bg-yellow-100 text-yellow-800 border-yellow-200'
+                            }`}
+                          >
+                            {selectedService.environment}
+                          </Badge>
+                        </div>
+
+                        {selectedService.description && (
+                          <div className="bg-gray-50 rounded-md p-3">
+                            <div className="flex items-center gap-1 mb-1">
+                              <Eye className="w-3 h-3 text-gray-600" />
+                              <label className="text-xs font-medium text-gray-700">Description</label>
+                            </div>
+                            <p className="text-xs text-gray-800 leading-relaxed">{selectedService.description}</p>
                           </div>
                         )}
-                        
-                        {selectedService.version && (
-                          <div className="bg-gray-50 rounded-lg p-4">
-                            <div className="flex items-center gap-2 mb-2">
-                              <GitBranch className="w-4 h-4 text-blue-600" />
-                              <label className="text-sm font-semibold text-gray-700">Version</label>
+
+                        {(selectedService.language || selectedService.version) && (
+                          <div className="grid grid-cols-2 gap-2">
+                            {selectedService.language && (
+                              <div className="bg-gray-50 rounded-md p-3">
+                                <div className="flex items-center gap-1 mb-1">
+                                  <Zap className="w-3 h-3 text-orange-600" />
+                                  <label className="text-xs font-medium text-gray-700">Language</label>
+                                </div>
+                                <p className="text-xs font-medium text-gray-900">{selectedService.language}</p>
+                              </div>
+                            )}
+                            
+                            {selectedService.version && (
+                              <div className="bg-gray-50 rounded-md p-3">
+                                <div className="flex items-center gap-1 mb-1">
+                                  <GitBranch className="w-3 h-3 text-blue-600" />
+                                  <label className="text-xs font-medium text-gray-700">Version</label>
+                                </div>
+                                <Badge variant="outline" className="text-xs h-5 px-2">
+                                  v{selectedService.version}
+                                </Badge>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Git Repository */}
+                        {selectedService.git_repo && (
+                          <div className="bg-gray-50 rounded-md p-3">
+                            <div className="flex items-center gap-1 mb-1">
+                              <GitBranch className="w-3 h-3 text-gray-600" />
+                              <label className="text-xs font-medium text-gray-700">Git Repository</label>
                             </div>
-                            <Badge variant="outline" className="font-medium">
-                              v{selectedService.version}
+                            <div className="flex items-start gap-1">
+                              <code className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-800 flex-1 break-all min-w-0 overflow-hidden">
+                                {selectedService.git_repo}
+                              </code>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => window.open(selectedService.git_repo, '_blank')}
+                                className="flex-shrink-0 h-6 w-6 p-0"
+                                title="Open Repository"
+                              >
+                                <ExternalLink size={10} />
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Deploy URL */}
+                        {selectedService.deploy_url && (
+                          <div className="bg-gray-50 rounded-md p-3">
+                            <div className="flex items-center gap-1 mb-1">
+                              <Monitor className="w-3 h-3 text-green-600" />
+                              <label className="text-xs font-medium text-gray-700">Deploy URL</label>
+                            </div>
+                            <div className="flex items-start gap-1">
+                              <code className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-800 flex-1 break-all min-w-0 overflow-hidden">
+                                {selectedService.deploy_url}
+                              </code>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => window.open(selectedService.deploy_url, '_blank')}
+                                className="flex-shrink-0 h-6 w-6 p-0"
+                                title="Open Deploy URL"
+                              >
+                                <ExternalLink size={10} />
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Domain */}
+                        {selectedService.domain && (
+                          <div className="bg-gray-50 rounded-md p-3">
+                            <div className="flex items-center gap-1 mb-1">
+                              <Globe className="w-3 h-3 text-blue-600" />
+                              <label className="text-xs font-medium text-gray-700">Domain</label>
+                            </div>
+                            <div className="flex items-start gap-1">
+                              <code className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-800 flex-1 break-all min-w-0 overflow-hidden">
+                                {selectedService.domain}
+                              </code>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => window.open(`https://${selectedService.domain}`, '_blank')}
+                                className="flex-shrink-0 h-6 w-6 p-0"
+                                title="Open Domain"
+                              >
+                                <ExternalLink size={10} />
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Notes */}
+                        {selectedService.notes && (
+                          <div className="bg-gray-50 rounded-md p-3">
+                            <div className="flex items-center gap-1 mb-1">
+                              <FileText className="w-3 h-3 text-gray-600" />
+                              <label className="text-xs font-medium text-gray-700">Notes</label>
+                            </div>
+                            <p className="text-xs text-gray-800 leading-relaxed whitespace-pre-wrap">{selectedService.notes}</p>
+                          </div>
+                        )}
+
+                        {/* Health Metrics */}
+                        {selectedService.health_metrics && (
+                          <div className="bg-gray-50 rounded-md p-3">
+                            <div className="flex items-center gap-1 mb-1">
+                              <Activity className="w-3 h-3 text-green-600" />
+                              <label className="text-xs font-medium text-gray-700">Health Metrics</label>
+                            </div>
+                            <div className="bg-gray-100 rounded p-2">
+                              <pre className="text-xs text-gray-800 overflow-x-auto">
+                                {JSON.stringify(selectedService.health_metrics, null, 2)}
+                              </pre>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Metadata */}
+                        {selectedService.metadata && (
+                          <div className="bg-gray-50 rounded-md p-3">
+                            <div className="flex items-center gap-1 mb-1">
+                              <Hash className="w-3 h-3 text-purple-600" />
+                              <label className="text-xs font-medium text-gray-700">Metadata</label>
+                            </div>
+                            <div className="bg-gray-100 rounded p-2">
+                              <pre className="text-xs text-gray-800 overflow-x-auto">
+                                {JSON.stringify(selectedService.metadata, null, 2)}
+                              </pre>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Created/Updated Info */}
+                        <div className="space-y-2">
+                          <div className="bg-gray-50 rounded-md p-3">
+                            <div className="flex items-center gap-1 mb-1">
+                              <Calendar className="w-3 h-3 text-gray-600" />
+                              <label className="text-xs font-medium text-gray-700">Created</label>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Clock className="w-2 h-2 text-gray-500" />
+                              <span className="text-xs text-gray-600">
+                                {new Date(selectedService.created_at).toLocaleDateString()} at {new Date(selectedService.created_at).toLocaleTimeString()}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1 mt-1">
+                              <User className="w-2 h-2 text-gray-500" />
+                              <span className="text-xs text-gray-600">
+                                ID: {selectedService.created_by}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="bg-gray-50 rounded-md p-3">
+                            <div className="flex items-center gap-1 mb-1">
+                              <Calendar className="w-3 h-3 text-gray-600" />
+                              <label className="text-xs font-medium text-gray-700">Last Updated</label>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Clock className="w-2 h-2 text-gray-500" />
+                              <span className="text-xs text-gray-600">
+                                {new Date(selectedService.updated_at).toLocaleDateString()} at {new Date(selectedService.updated_at).toLocaleTimeString()}
+                              </span>
+                            </div>
+                            {selectedService.updated_by && (
+                              <div className="flex items-center gap-1 mt-1">
+                                <User className="w-2 h-2 text-gray-500" />
+                                <span className="text-xs text-gray-600">
+                                  ID: {selectedService.updated_by}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </ScrollArea>
+                </div>
+              )}
+
+              {/* Dependency Details Panel */}
+              {selectedDependency && (
+                <div className="flex-1 overflow-hidden border-t">
+                  <ScrollArea className="h-full">
+                    <div className="p-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2">
+                          <Link className="w-4 h-4 text-blue-600" />
+                          <h3 className="font-semibold text-base text-gray-900">Dependency Details</h3>
+                        </div>
+                        <div className="flex gap-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setShowDependencyForm(true)}
+                            className="hover:bg-blue-50 h-7 w-7 p-0"
+                            title="Edit Dependency"
+                          >
+                            <Edit size={12} />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleDeleteDependency(selectedDependency.id)}
+                            className="hover:bg-red-600 h-7 w-7 p-0"
+                          >
+                            <Trash2 size={12} />
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            onClick={() => setSelectedDependency(null)}
+                            className="hover:bg-gray-100 h-7 w-7 p-0"
+                            title="Close"
+                          >
+                            <X size={12} />
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-md p-3 border border-blue-200">
+                          <div className="flex items-center gap-1 mb-2">
+                            <ArrowRight className="w-3 h-3 text-blue-600" />
+                            <label className="text-xs font-medium text-gray-700">Connection Flow</label>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="bg-white rounded-md px-2 py-1 border">
+                              <p className="text-xs font-medium text-gray-900">
+                                {flowHook.services.find(s => s.id === selectedDependency.source_id)?.name}
+                              </p>
+                            </div>
+                            <ArrowRight className="w-3 h-3 text-blue-600" />
+                            <div className="bg-white rounded-md px-2 py-1 border">
+                              <p className="text-xs font-medium text-gray-900">
+                                {flowHook.services.find(s => s.id === selectedDependency.target_id)?.name}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="bg-gray-50 rounded-md p-3">
+                            <div className="flex items-center gap-1 mb-1">
+                              <Globe className="w-3 h-3 text-green-600" />
+                              <label className="text-xs font-medium text-gray-700">Protocol</label>
+                            </div>
+                            <Badge variant="outline" className="text-xs h-5 px-2 bg-green-100 text-green-800 border-green-200">
+                              {selectedDependency.protocol || 'HTTP'}
+                            </Badge>
+                          </div>
+
+                          <div className="bg-gray-50 rounded-md p-3">
+                            <div className="flex items-center gap-1 mb-1">
+                              <Zap className="w-3 h-3 text-orange-600" />
+                              <label className="text-xs font-medium text-gray-700">Method</label>
+                            </div>
+                            <Badge variant="secondary" className="text-xs h-5 px-2">
+                              {selectedDependency.method || 'GET'}
+                            </Badge>
+                          </div>
+                        </div>
+
+                        {/* Type */}
+                        {selectedDependency.type && (
+                          <div className="bg-gray-50 rounded-md p-3">
+                            <div className="flex items-center gap-1 mb-1">
+                              <Settings className="w-3 h-3 text-gray-600" />
+                              <label className="text-xs font-medium text-gray-700">Type</label>
+                            </div>
+                            <Badge variant="outline" className="text-xs h-5 px-2">
+                              {selectedDependency.type}
                             </Badge>
                           </div>
                         )}
-                      </div>
-                    )}
 
-                    {/* Git Repository */}
-                    {selectedService.git_repo && (
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <GitBranch className="w-4 h-4 text-gray-600" />
-                          <label className="text-sm font-semibold text-gray-700">Git Repository</label>
-                        </div>
-                        <div className="flex items-start gap-2">
-                          <code className="text-sm bg-gray-100 px-2 py-1 rounded text-gray-800 flex-1 break-all min-w-0 overflow-hidden">
-                            {selectedService.git_repo}
-                          </code>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => window.open(selectedService.git_repo, '_blank')}
-                            className="flex-shrink-0"
-                            title="Open Repository"
-                          >
-                            <ExternalLink size={14} />
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Deploy URL */}
-                    {selectedService.deploy_url && (
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Monitor className="w-4 h-4 text-green-600" />
-                          <label className="text-sm font-semibold text-gray-700">Deploy URL</label>
-                        </div>
-                        <div className="flex items-start gap-2">
-                          <code className="text-sm bg-gray-100 px-2 py-1 rounded text-gray-800 flex-1 break-all min-w-0 overflow-hidden">
-                            {selectedService.deploy_url}
-                          </code>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => window.open(selectedService.deploy_url, '_blank')}
-                            className="flex-shrink-0"
-                            title="Open Deploy URL"
-                          >
-                            <ExternalLink size={14} />
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Domain */}
-                    {selectedService.domain && (
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Globe className="w-4 h-4 text-blue-600" />
-                          <label className="text-sm font-semibold text-gray-700">Domain</label>
-                        </div>
-                        <div className="flex items-start gap-2">
-                          <code className="text-sm bg-gray-100 px-2 py-1 rounded text-gray-800 flex-1 break-all min-w-0 overflow-hidden">
-                            {selectedService.domain}
-                          </code>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => window.open(`https://${selectedService.domain}`, '_blank')}
-                            className="flex-shrink-0"
-                            title="Open Domain"
-                          >
-                            <ExternalLink size={14} />
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Notes */}
-                    {selectedService.notes && (
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <FileText className="w-4 h-4 text-gray-600" />
-                          <label className="text-sm font-semibold text-gray-700">Notes</label>
-                        </div>
-                        <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">{selectedService.notes}</p>
-                      </div>
-                    )}
-
-                    {/* Health Metrics */}
-                    {selectedService.health_metrics && (
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Activity className="w-4 h-4 text-green-600" />
-                          <label className="text-sm font-semibold text-gray-700">Health Metrics</label>
-                        </div>
-                        <div className="bg-gray-100 rounded p-3">
-                          <pre className="text-xs text-gray-800 overflow-x-auto">
-                            {JSON.stringify(selectedService.health_metrics, null, 2)}
-                          </pre>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Metadata */}
-                    {selectedService.metadata && (
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Hash className="w-4 h-4 text-purple-600" />
-                          <label className="text-sm font-semibold text-gray-700">Metadata</label>
-                        </div>
-                        <div className="bg-gray-100 rounded p-3">
-                          <pre className="text-xs text-gray-800 overflow-x-auto">
-                            {JSON.stringify(selectedService.metadata, null, 2)}
-                          </pre>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Created/Updated Info */}
-                    <div className="grid grid-cols-1 gap-4">
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Calendar className="w-4 h-4 text-gray-600" />
-                          <label className="text-sm font-semibold text-gray-700">Created</label>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Clock className="w-3 h-3 text-gray-500" />
-                          <span className="text-xs text-gray-600">
-                            {new Date(selectedService.created_at).toLocaleDateString()} at {new Date(selectedService.created_at).toLocaleTimeString()}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 mt-1">
-                          <User className="w-3 h-3 text-gray-500" />
-                          <span className="text-xs text-gray-600">
-                            ID: {selectedService.created_by}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Calendar className="w-4 h-4 text-gray-600" />
-                          <label className="text-sm font-semibold text-gray-700">Last Updated</label>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Clock className="w-3 h-3 text-gray-500" />
-                          <span className="text-xs text-gray-600">
-                            {new Date(selectedService.updated_at).toLocaleDateString()} at {new Date(selectedService.updated_at).toLocaleTimeString()}
-                          </span>
-                        </div>
-                        {selectedService.updated_by && (
-                          <div className="flex items-center gap-2 mt-1">
-                            <User className="w-3 h-3 text-gray-500" />
-                            <span className="text-xs text-gray-600">
-                              ID: {selectedService.updated_by}
-                            </span>
+                        {selectedDependency.description && (
+                          <div className="bg-gray-50 rounded-md p-3">
+                            <div className="flex items-center gap-1 mb-1">
+                              <Eye className="w-3 h-3 text-gray-600" />
+                              <label className="text-xs font-medium text-gray-700">Description</label>
+                            </div>
+                            <p className="text-xs text-gray-800 leading-relaxed">{selectedDependency.description}</p>
                           </div>
                         )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              {selectedDependency && (
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-3">
-                      <Link className="w-5 h-5 text-blue-600" />
-                      <h3 className="font-bold text-lg text-gray-900">Dependency Details</h3>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleDeleteDependency(selectedDependency.id)}
-                        className="hover:bg-red-600"
-                      >
-                        <Trash2 size={16} />
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant="ghost" 
-                        onClick={() => setSelectedDependency(null)}
-                        className="hover:bg-gray-100"
-                        title="Close"
-                      >
-                        <X size={16} />
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-6">
-                    <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4 border border-blue-200">
-                      <div className="flex items-center gap-2 mb-3">
-                        <ArrowRight className="w-4 h-4 text-blue-600" />
-                        <label className="text-sm font-semibold text-gray-700">Connection Flow</label>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="bg-white rounded-lg px-3 py-2 border">
-                          <p className="text-sm font-semibold text-gray-900">
-                            {flowHook.services.find(s => s.id === selectedDependency.source_id)?.name}
-                          </p>
-                        </div>
-                        <ArrowRight className="w-5 h-5 text-blue-600" />
-                        <div className="bg-white rounded-lg px-3 py-2 border">
-                          <p className="text-sm font-semibold text-gray-900">
-                            {flowHook.services.find(s => s.id === selectedDependency.target_id)?.name}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Globe className="w-4 h-4 text-green-600" />
-                          <label className="text-sm font-semibold text-gray-700">Protocol</label>
-                        </div>
-                        <Badge variant="outline" className="font-medium bg-green-100 text-green-800 border-green-200">
-                          {selectedDependency.protocol || 'HTTP'}
-                        </Badge>
-                      </div>
-
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Zap className="w-4 h-4 text-orange-600" />
-                          <label className="text-sm font-semibold text-gray-700">Method</label>
-                        </div>
-                        <Badge variant="secondary" className="font-medium">
-                          {selectedDependency.method || 'GET'}
-                        </Badge>
-                      </div>
-                    </div>
-
-                    {/* Type */}
-                    {selectedDependency.type && (
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Settings className="w-4 h-4 text-gray-600" />
-                          <label className="text-sm font-semibold text-gray-700">Type</label>
-                        </div>
-                        <Badge variant="outline" className="font-medium">
-                          {selectedDependency.type}
-                        </Badge>
-                      </div>
-                    )}
-
-                    {selectedDependency.description && (
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Eye className="w-4 h-4 text-gray-600" />
-                          <label className="text-sm font-semibold text-gray-700">Description</label>
-                        </div>
-                        <p className="text-sm text-gray-800 leading-relaxed">{selectedDependency.description}</p>
-                      </div>
-                    )}
-
-                    {/* Created/Updated Info */}
-                    <div className="grid grid-cols-1 gap-4">
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Calendar className="w-4 h-4 text-gray-600" />
-                          <label className="text-sm font-semibold text-gray-700">Created</label>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Clock className="w-3 h-3 text-gray-500" />
-                          <span className="text-xs text-gray-600">
-                            {new Date(selectedDependency.created_at).toLocaleDateString()} at {new Date(selectedDependency.created_at).toLocaleTimeString()}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 mt-1">
-                          <User className="w-3 h-3 text-gray-500" />
-                          <span className="text-xs text-gray-600">
-                            ID: {selectedDependency.created_by}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Calendar className="w-4 h-4 text-gray-600" />
-                          <label className="text-sm font-semibold text-gray-700">Last Updated</label>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Clock className="w-3 h-3 text-gray-500" />
-                          <span className="text-xs text-gray-600">
-                            {new Date(selectedDependency.updated_at).toLocaleDateString()} at {new Date(selectedDependency.updated_at).toLocaleTimeString()}
-                          </span>
-                        </div>
-                        {selectedDependency.updated_by && (
-                          <div className="flex items-center gap-2 mt-1">
-                            <User className="w-3 h-3 text-gray-500" />
-                            <span className="text-xs text-gray-600">
-                              ID: {selectedDependency.updated_by}
-                            </span>
+                        {/* Created/Updated Info */}
+                        <div className="space-y-2">
+                          <div className="bg-gray-50 rounded-md p-3">
+                            <div className="flex items-center gap-1 mb-1">
+                              <Calendar className="w-3 h-3 text-gray-600" />
+                              <label className="text-xs font-medium text-gray-700">Created</label>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Clock className="w-2 h-2 text-gray-500" />
+                              <span className="text-xs text-gray-600">
+                                {new Date(selectedDependency.created_at).toLocaleDateString()} at {new Date(selectedDependency.created_at).toLocaleTimeString()}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1 mt-1">
+                              <User className="w-2 h-2 text-gray-500" />
+                              <span className="text-xs text-gray-600">
+                                ID: {selectedDependency.created_by}
+                              </span>
+                            </div>
                           </div>
-                        )}
+
+                          <div className="bg-gray-50 rounded-md p-3">
+                            <div className="flex items-center gap-1 mb-1">
+                              <Calendar className="w-3 h-3 text-gray-600" />
+                              <label className="text-xs font-medium text-gray-700">Last Updated</label>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Clock className="w-2 h-2 text-gray-500" />
+                              <span className="text-xs text-gray-600">
+                                {new Date(selectedDependency.updated_at).toLocaleDateString()} at {new Date(selectedDependency.updated_at).toLocaleTimeString()}
+                              </span>
+                            </div>
+                            {selectedDependency.updated_by && (
+                              <div className="flex items-center gap-1 mt-1">
+                                <User className="w-2 h-2 text-gray-500" />
+                                <span className="text-xs text-gray-600">
+                                  ID: {selectedDependency.updated_by}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  </ScrollArea>
                 </div>
               )}
-            </ScrollArea>
-          </div>
-        )}
+            </>
+          )}
+        </div>
       </div>
 
       {/* Dialogs */}
@@ -2001,15 +2028,6 @@ function ServiceDependencyFlow() {
         services={flowHook.services}
         dependency={selectedDependency}
       />
-
-              {/* Project Comments Panel */}
-        <ProjectCommentsPanel 
-          projectId={projectId} 
-          serviceId={selectedService?.id}
-          isOpen={showComments}
-          onToggle={() => setShowComments(!showComments)}
-          className="fixed bottom-4 right-4 z-50 shadow-xl"
-        />
     </Layout>
   )
 }
