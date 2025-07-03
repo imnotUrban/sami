@@ -460,38 +460,38 @@ interface BackgroundStyle {
 
 const backgroundStyles: Record<string, BackgroundStyle> = {
   gradient: {
-    name: "Gradiente Suave",
+    name: "Smooth Gradient",
     config: {
       gap: 20,
       size: 1.2,
-      color: "#8b5cf6",
+      color: "#a78bfa",
       style: {
-        background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #e2e8f0 100%)',
-        backgroundImage: `radial-gradient(circle at center, #8b5cf6 1.2px, transparent 1.2px)`,
+        background: '#f8fafc',
+        backgroundImage: `radial-gradient(circle at center, #a78bfa 1.2px, transparent 1.2px)`,
       },
     },
   },
   volcanic: {
-    name: "Volcánico",
+    name: "Volcanic",
     config: {
       gap: 18,
       size: 2.0,
-      color: "#ff0080",
+      color: "#f87171",
       style: {
-        background: 'radial-gradient(circle at 30% 70%, #000000 0%, #1a0000 30%, #330000 60%, #660000 100%)',
-        backgroundImage: `radial-gradient(circle at center, #ff0080 2.0px, transparent 2.0px), radial-gradient(circle at 25% 25%, rgba(255, 0, 128, 0.3) 0%, transparent 40%)`,
+        background: '#fef2f2',
+        backgroundImage: `radial-gradient(circle at center, #f87171 2.0px, transparent 2.0px)`,
       },
     },
   },
   electric: {
-    name: "Eléctrico",
+    name: "Electric",
     config: {
       gap: 15,
       size: 2.5,
-      color: "#00ffff",
+      color: "#67e8f9",
       style: {
-        background: 'linear-gradient(45deg, #000011 0%, #001122 25%, #002244 50%, #003366 75%, #004488 100%)',
-        backgroundImage: `radial-gradient(circle at center, #00ffff 2.5px, transparent 2.5px), radial-gradient(circle at 75% 25%, rgba(0, 255, 255, 0.4) 0%, transparent 30%)`,
+        background: '#f0f9ff',
+        backgroundImage: `radial-gradient(circle at center, #67e8f9 2.5px, transparent 2.5px)`,
       },
     },
   },
@@ -500,75 +500,75 @@ const backgroundStyles: Record<string, BackgroundStyle> = {
     config: {
       gap: 12,
       size: 3.0,
-      color: "#00ff00",
+      color: "#86efac",
       style: {
-        background: 'linear-gradient(180deg, #000000 0%, #001100 50%, #000000 100%)',
-        backgroundImage: `radial-gradient(circle at center, #00ff00 3.0px, transparent 3.0px), linear-gradient(90deg, rgba(0, 255, 0, 0.1) 0%, transparent 50%, rgba(0, 255, 0, 0.1) 100%)`,
+        background: '#f0fdf4',
+        backgroundImage: `radial-gradient(circle at center, #86efac 3.0px, transparent 3.0px)`,
       },
     },
   },
   inferno: {
-    name: "Infierno",
+    name: "Inferno",
     config: {
       gap: 20,
       size: 2.2,
-      color: "#ffff00",
+      color: "#fde047",
       style: {
-        background: 'radial-gradient(ellipse at center, #ff0000 0%, #cc0000 30%, #990000 60%, #330000 80%, #000000 100%)',
-        backgroundImage: `radial-gradient(circle at center, #ffff00 2.2px, transparent 2.2px), radial-gradient(circle at 60% 40%, rgba(255, 255, 0, 0.3) 0%, transparent 50%)`,
+        background: '#fefce8',
+        backgroundImage: `radial-gradient(circle at center, #fde047 2.2px, transparent 2.2px)`,
       },
     },
   },
   cosmic: {
-    name: "Cósmico",
+    name: "Cosmic",
     config: {
       gap: 25,
       size: 1.8,
-      color: "#ff00ff",
+      color: "#d8b4fe",
       style: {
-        background: 'radial-gradient(circle at 20% 80%, #000033 0%, #000066 20%, #330066 40%, #660099 60%, #9900cc 80%, #cc00ff 100%)',
-        backgroundImage: `radial-gradient(circle at center, #ff00ff 1.8px, transparent 1.8px), radial-gradient(circle at 80% 20%, rgba(255, 0, 255, 0.2) 0%, transparent 60%)`,
+        background: '#faf5ff',
+        backgroundImage: `radial-gradient(circle at center, #d8b4fe 1.8px, transparent 1.8px)`,
       },
     },
   },
   arctic: {
-    name: "Ártico",
+    name: "Arctic",
     config: {
       gap: 22,
       size: 1.5,
-      color: "#0080ff",
+      color: "#60a5fa",
       style: {
-        background: 'linear-gradient(135deg, #ffffff 0%, #e6f3ff 25%, #ccddff 50%, #99bbff 75%, #6699ff 100%)',
-        backgroundImage: `radial-gradient(circle at center, #0080ff 1.5px, transparent 1.5px)`,
+        background: '#eff6ff',
+        backgroundImage: `radial-gradient(circle at center, #60a5fa 1.5px, transparent 1.5px)`,
       },
     },
   },
   laser: {
-    name: "Láser",
+    name: "Laser",
     config: {
       gap: 14,
       size: 2.8,
-      color: "#ff4000",
+      color: "#fb923c",
       style: {
-        background: 'linear-gradient(45deg, #000000 0%, #220000 20%, #440000 40%, #660000 60%, #880000 80%, #aa0000 100%)',
-        backgroundImage: `radial-gradient(circle at center, #ff4000 2.8px, transparent 2.8px), linear-gradient(45deg, rgba(255, 64, 0, 0.2) 0%, transparent 25%, rgba(255, 64, 0, 0.2) 50%, transparent 75%)`,
+        background: '#fff7ed',
+        backgroundImage: `radial-gradient(circle at center, #fb923c 2.8px, transparent 2.8px)`,
       },
     },
   },
   toxic: {
-    name: "Tóxico",
+    name: "Toxic",
     config: {
       gap: 16,
       size: 2.4,
-      color: "#80ff00",
+      color: "#a3e635",
       style: {
-        background: 'radial-gradient(circle at center, #001100 0%, #002200 30%, #003300 60%, #004400 80%, #005500 100%)',
-        backgroundImage: `radial-gradient(circle at center, #80ff00 2.4px, transparent 2.4px), radial-gradient(circle at 40% 60%, rgba(128, 255, 0, 0.3) 0%, transparent 40%)`,
+        background: '#f7fee7',
+        backgroundImage: `radial-gradient(circle at center, #a3e635 2.4px, transparent 2.4px)`,
       },
     },
   },
   clean: {
-    name: "Limpio",
+    name: "Clean",
     config: {
       style: {
         background: '#ffffff',
@@ -950,26 +950,10 @@ function ServiceDependencyFlow() {
             fitViewOptions={{ padding: 0.1 }}
           >
             <Background {...backgroundStyles[selectedBackground].config} />
-            <Controls 
-              position="top-left"
-              showZoom={true}
-              showFitView={true}
-              showInteractive={true}
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '8px',
-                background: 'rgba(255, 255, 255, 0.95)',
-                border: '1px solid #e5e7eb',
-                borderRadius: '12px',
-                padding: '8px',
-                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-                backdropFilter: 'blur(8px)',
-              }}
-            />
+            {/* Controls removed per user request */}
             
             {/* Background Selector */}
-            <div className="absolute top-20 left-4 z-20">
+            <div className="absolute top-12 left-4 z-20">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -1170,33 +1154,7 @@ function ServiceDependencyFlow() {
               )}
             </div>
 
-            {/* Header Controls Overlay */}
-            <div className="absolute top-4 left-4 z-10 flex items-center gap-3 bg-white/95 backdrop-blur-sm rounded-xl border shadow-lg p-3">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleNavigation('/dashboard/projects')}
-                className="hover:bg-gray-50"
-              >
-                <ArrowLeft size={14} className="mr-1" />
-                Back to Projects
-              </Button>
-              <div className="border-l pl-3">
-                <h1 className="text-sm font-semibold text-gray-900">{projectName}</h1>
-                <p className="text-xs text-muted-foreground">
-                  {flowHook.services.length} services, {flowHook.dependencies.length} dependencies
-                </p>
-              </div>
-              {flowHook.copiedService && (
-                <div className="border-l pl-3">
-                  <div className="flex items-center gap-2 text-xs text-blue-600">
-                    <Copy size={12} />
-                    <span>"{flowHook.copiedService.name}" copied</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">Press Ctrl+V to paste</p>
-                </div>
-              )}
-            </div>
+            
 
             {/* Sidebar Toggle Overlay */}
             <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
