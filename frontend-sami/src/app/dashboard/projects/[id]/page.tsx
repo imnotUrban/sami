@@ -81,7 +81,6 @@ interface Project {
 
 interface ProjectFormData {
   name: string;
-  slug: string;
   description: string;
   visibility: 'public' | 'private';
 }
@@ -100,7 +99,6 @@ export default function ProjectDetailPage() {
   const form = useForm<ProjectFormData>({
     defaultValues: {
       name: '',
-      slug: '',
       description: '',
       visibility: 'private',
     },
@@ -117,7 +115,6 @@ export default function ProjectDetailPage() {
     if (project) {
       form.reset({
         name: project.name,
-        slug: project.slug,
         description: project.description,
         visibility: project.visibility,
       });
@@ -286,18 +283,11 @@ export default function ProjectDetailPage() {
                 className="flex items-center"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Atrás
+                Back
               </Button>
               <Separator orientation="vertical" className="h-6" />
               <div>
                 <h1 className="text-xl font-semibold text-gray-900">{project.name}</h1>
-                                    <Button
-                      variant="link"
-                      className="h-auto p-0 text-sm text-gray-500 hover:text-blue-600"
-                      onClick={() => window.open(`/project-slug/${project.slug}`, '_blank')}
-                    >
-                      /{project.slug}
-                    </Button>
               </div>
             </div>
             
@@ -306,12 +296,12 @@ export default function ProjectDetailPage() {
                 {project.visibility === 'public' ? (
                   <>
                     <Globe className="w-3 h-3 mr-1" />
-                    Público
+                    Public
                   </>
                 ) : (
                   <>
                     <Lock className="w-3 h-3 mr-1" />
-                    Privado
+                    Private
                   </>
                 )}
               </Badge>
@@ -320,7 +310,7 @@ export default function ProjectDetailPage() {
                 <DialogTrigger asChild>
                   <Button variant="outline" size="sm">
                     <Edit2 className="w-4 h-4 mr-2" />
-                    Editar
+                    Edit
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[425px]">
@@ -346,23 +336,6 @@ export default function ProjectDetailPage() {
                         )}
                       />
                       
-                      <FormField
-                        control={form.control}
-                        name="slug"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Slug</FormLabel>
-                            <FormControl>
-                                                              <Input placeholder="my-amazing-project" {...field} />
-                            </FormControl>
-                            <FormDescription>
-                              Friendly URL for your project
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
                       <FormField
                         control={form.control}
                         name="description"
@@ -391,12 +364,12 @@ export default function ProjectDetailPage() {
                                       {field.value === 'public' ? (
                                         <>
                                           <Globe className="w-4 h-4 mr-2" />
-                                          Público
+                                          Public
                                         </>
                                       ) : (
                                         <>
                                           <Lock className="w-4 h-4 mr-2" />
-                                          Privado
+                                          Private
                                         </>
                                       )}
                                     </span>
@@ -409,14 +382,14 @@ export default function ProjectDetailPage() {
                                   className="flex items-center"
                                 >
                                   <Globe className="w-4 h-4 mr-2" />
-                                  Público
+                                  Public
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => field.onChange('private')}
                                   className="flex items-center"
                                 >
                                   <Lock className="w-4 h-4 mr-2" />
-                                  Privado
+                                  Private
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -432,10 +405,10 @@ export default function ProjectDetailPage() {
                           onClick={() => setIsEditDialogOpen(false)}
                           disabled={isSubmitting}
                         >
-                          Cancelar
+                          Cancel
                         </Button>
                         <Button type="submit" disabled={isSubmitting}>
-                          {isSubmitting ? 'Guardando...' : 'Guardar Cambios'}
+                          {isSubmitting ? 'Saving...' : 'Save Changes'}
                         </Button>
                       </DialogFooter>
                     </form>
@@ -450,7 +423,7 @@ export default function ProjectDetailPage() {
                 className="text-red-600 hover:text-red-700 hover:bg-red-50"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
-                Eliminar
+                Delete
               </Button>
             </div>
           </div>
@@ -465,9 +438,9 @@ export default function ProjectDetailPage() {
             {/* Project Overview */}
             <Card>
               <CardHeader>
-                <CardTitle>Descripción General del Proyecto</CardTitle>
+                <CardTitle>Project Overview</CardTitle>
                 <CardDescription>
-                  Información básica sobre este proyecto
+                  Basic information about this project
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -514,12 +487,12 @@ export default function ProjectDetailPage() {
                         {project.visibility === 'public' ? (
                           <>
                             <Globe className="w-3 h-3 mr-1" />
-                            Público
+                            Public
                           </>
                         ) : (
                           <>
                             <Lock className="w-3 h-3 mr-1" />
-                            Privado
+                            Private
                           </>
                         )}
                       </Badge>
@@ -545,31 +518,20 @@ export default function ProjectDetailPage() {
             {/* Project Details */}
             <Card>
               <CardHeader>
-                <CardTitle>Detalles del Proyecto</CardTitle>
+                <CardTitle>Project Details</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-1">ID del Proyecto</h3>
+                    <h3 className="text-sm font-medium text-gray-500 mb-1">Project ID</h3>
                     <p className="text-sm text-gray-900">{project.id}</p>
                   </div>
                   
                   <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-1">Slug</h3>
-                    <Button
-                      variant="link"
-                      className="h-auto p-0 text-sm text-blue-600 hover:text-blue-800 font-mono"
-                      onClick={() => window.open(`/project-slug/${project.slug}`, '_blank')}
-                    >
-                      /{project.slug}
-                    </Button>
-                  </div>
-                  
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-1">Creado</h3>
+                    <h3 className="text-sm font-medium text-gray-500 mb-1">Created</h3>
                     <div className="flex items-center text-sm text-gray-900">
                       <Calendar className="w-4 h-4 mr-2" />
-                      {new Date(project.created_at).toLocaleDateString('es-ES', {
+                      {new Date(project.created_at).toLocaleDateString('en-US', {
                         year: 'numeric',
                         month: 'long',
                         day: 'numeric'
@@ -578,10 +540,10 @@ export default function ProjectDetailPage() {
                   </div>
                   
                   <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-1">Última Actualización</h3>
+                    <h3 className="text-sm font-medium text-gray-500 mb-1">Last Updated</h3>
                     <div className="flex items-center text-sm text-gray-900">
                       <Calendar className="w-4 h-4 mr-2" />
-                      {new Date(project.updated_at).toLocaleDateString('es-ES', {
+                      {new Date(project.updated_at).toLocaleDateString('en-US', {
                         year: 'numeric',
                         month: 'long',
                         day: 'numeric'
@@ -596,7 +558,7 @@ export default function ProjectDetailPage() {
             {project.owner && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Propietario</CardTitle>
+                  <CardTitle>Owner</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
@@ -625,7 +587,7 @@ export default function ProjectDetailPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <MessageCircle className="w-5 h-5" />
-                  Comentarios
+                  Comments
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">

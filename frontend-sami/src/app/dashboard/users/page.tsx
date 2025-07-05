@@ -125,14 +125,14 @@ export default function UsersPage() {
       
     } catch (error: any) {
       console.error('Error updating user:', error);
-      alert('Error al actualizar usuario: ' + (error.message || 'Error desconocido'));
+      alert('Error updating user: ' + (error.message || 'Unknown error'));
     } finally {
       setUpdating(false);
     }
   };
 
   const handleDeleteUser = async (userId: number) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar este usuario? Esta acción no se puede deshacer.')) return;
+    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) return;
     
     setUpdating(true);
     try {
@@ -146,7 +146,7 @@ export default function UsersPage() {
       
     } catch (error: any) {
       console.error('Error deleting user:', error);
-      alert('Error al eliminar usuario: ' + (error.message || 'Error desconocido'));
+      alert('Error deleting user: ' + (error.message || 'Unknown error'));
     } finally {
       setUpdating(false);
     }
@@ -169,7 +169,7 @@ export default function UsersPage() {
       await refresh(); // Refrescar la lista de usuarios
     } catch (error: any) {
       console.error('Error inviting user:', error);
-      alert('Error al invitar usuario: ' + (error.message || 'Error desconocido'));
+      alert('Error inviting user: ' + (error.message || 'Unknown error'));
     } finally {
       setInviting(false);
     }
@@ -192,11 +192,11 @@ export default function UsersPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
-        return <Badge variant="default" className="bg-green-100 text-green-800">Activo</Badge>;
+        return <Badge variant="default" className="bg-green-100 text-green-800">Active</Badge>;
       case 'inactive':
-        return <Badge variant="secondary">Inactivo</Badge>;
+        return <Badge variant="secondary">Inactive</Badge>;
       case 'suspended':
-        return <Badge variant="destructive">Suspendido</Badge>;
+        return <Badge variant="destructive">Suspended</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -207,14 +207,14 @@ export default function UsersPage() {
       case 'admin':
         return <Badge variant="default" className="bg-purple-100 text-purple-800"><Shield className="w-3 h-3 mr-1" />Admin</Badge>;
       case 'user':
-        return <Badge variant="outline"><Users className="w-3 h-3 mr-1" />Usuario</Badge>;
+        return <Badge variant="outline"><Users className="w-3 h-3 mr-1" />User</Badge>;
       default:
         return <Badge variant="outline">{role}</Badge>;
     }
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-ES', {
+    return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -229,7 +229,7 @@ export default function UsersPage() {
         <div className="container mx-auto px-4 py-8">
           <div className="flex justify-center items-center py-8">
             <RefreshCw className="w-6 h-6 animate-spin mr-2" />
-            Verificando permisos...
+            Checking permissions...
           </div>
         </div>
       </Layout>
@@ -242,7 +242,7 @@ export default function UsersPage() {
         <div className="container mx-auto px-4 py-8">
           <Alert>
             <Shield className="h-4 w-4" />
-            <AlertDescription>No tienes permisos para acceder a esta página</AlertDescription>
+            <AlertDescription>You don't have permission to access this page</AlertDescription>
           </Alert>
         </div>
       </Layout>
@@ -257,27 +257,27 @@ export default function UsersPage() {
           <div>
             <h1 className="text-3xl font-bold text-gray-900 flex items-center">
               <Users className="w-8 h-8 mr-3 text-blue-600" />
-              Gestión de Usuarios
+              User Management
             </h1>
-            <p className="text-gray-600 mt-2">Administra usuarios, roles y permisos del sistema</p>
+            <p className="text-gray-600 mt-2">Manage users, roles and system permissions</p>
           </div>
           
           <Dialog open={inviteModalOpen} onOpenChange={setInviteModalOpen}>
             <DialogTrigger asChild>
               <Button className="bg-blue-600 hover:bg-blue-700">
                 <UserPlus className="w-4 h-4 mr-2" />
-                Invitar Usuario
+                Invite User
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-md">
               <DialogHeader>
                 <DialogTitle>
-                  {inviteResult ? 'Usuario Invitado Exitosamente' : 'Invitar Nuevo Usuario'}
+                  {inviteResult ? 'User Invited Successfully' : 'Invite New User'}
                 </DialogTitle>
                 <DialogDescription>
                   {inviteResult 
-                    ? 'El usuario ha sido creado con una contraseña temporal'
-                    : 'Completa los datos para enviar una invitación'
+                    ? 'The user has been created with a temporary password'
+                    : 'Complete the details to send an invitation'
                   }
                 </DialogDescription>
               </DialogHeader>
@@ -295,7 +295,7 @@ export default function UsersPage() {
                   
                   {/* Generated Password */}
                   <div className="space-y-2">
-                    <Label className="text-sm font-medium text-gray-700">Contraseña Temporal</Label>
+                    <Label className="text-sm font-medium text-gray-700">Temporary Password</Label>
                     <div className="flex items-center space-x-2">
                       <Input 
                         type="text" 
@@ -314,44 +314,44 @@ export default function UsersPage() {
                       </Button>
                     </div>
                     <p className="text-xs text-gray-500">
-                      {passwordCopied ? 'Contraseña copiada al portapapeles' : 'Copia esta contraseña para compartir con el usuario'}
+                      {passwordCopied ? 'Password copied to clipboard' : 'Copy this password to share with the user'}
                     </p>
                   </div>
                   
                   <div className="flex justify-end pt-4">
                     <Button onClick={closeInviteModal}>
-                      Cerrar
+                      Close
                     </Button>
                   </div>
                 </div>
               ) : (
                 <form onSubmit={handleInviteUser} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Nombre Completo</Label>
+                    <Label htmlFor="name">Full Name</Label>
                     <Input
                       id="name"
                       name="name"
                       type="text"
-                      placeholder="Ej: Juan Pérez"
+                      placeholder="e.g. John Doe"
                       required
                       disabled={inviting}
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="email">Correo Electrónico</Label>
+                    <Label htmlFor="email">Email Address</Label>
                     <Input
                       id="email"
                       name="email"
                       type="email"
-                      placeholder="usuario@ejemplo.com"
+                      placeholder="user@example.com"
                       required
                       disabled={inviting}
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="role">Rol</Label>
+                    <Label htmlFor="role">Role</Label>
                     <Select name="role" defaultValue="user" disabled={inviting}>
                       <SelectTrigger>
                         <SelectValue />
@@ -360,13 +360,13 @@ export default function UsersPage() {
                         <SelectItem value="user">
                           <div className="flex items-center">
                             <Users className="w-4 h-4 mr-2" />
-                            Usuario
+                            User
                           </div>
                         </SelectItem>
                         <SelectItem value="admin">
                           <div className="flex items-center">
                             <Shield className="w-4 h-4 mr-2" />
-                            Administrador
+                            Administrator
                           </div>
                         </SelectItem>
                       </SelectContent>
@@ -380,18 +380,18 @@ export default function UsersPage() {
                       onClick={() => setInviteModalOpen(false)}
                       disabled={inviting}
                     >
-                      Cancelar
+                      Cancel
                     </Button>
                     <Button type="submit" disabled={inviting}>
                       {inviting ? (
                         <>
                           <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                          Invitando...
+                          Inviting...
                         </>
                       ) : (
                         <>
                           <UserPlus className="w-4 h-4 mr-2" />
-                          Invitar Usuario
+                          Invite User
                         </>
                       )}
                     </Button>
@@ -407,52 +407,52 @@ export default function UsersPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total de Usuarios</CardTitle>
+                <CardTitle className="text-sm font-medium">Total Users</CardTitle>
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stats.total_users}</div>
                 <p className="text-xs text-muted-foreground">
-                  {stats.new_users_last_30_days} nuevos en 30 días
+                  {stats.new_users_last_30_days} new in 30 days
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Usuarios Activos</CardTitle>
+                <CardTitle className="text-sm font-medium">Active Users</CardTitle>
                 <UserCheck className="h-4 w-4 text-green-600" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-green-600">{stats.active_users}</div>
                 <p className="text-xs text-muted-foreground">
-                  {Math.round((stats.active_users / stats.total_users) * 100)}% del total
+                  {Math.round((stats.active_users / stats.total_users) * 100)}% of total
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Administradores</CardTitle>
+                <CardTitle className="text-sm font-medium">Administrators</CardTitle>
                 <Shield className="h-4 w-4 text-purple-600" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-purple-600">{stats.admin_users}</div>
                 <p className="text-xs text-muted-foreground">
-                  {stats.regular_users} usuarios regulares
+                  {stats.regular_users} regular users
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Proyectos Totales</CardTitle>
+                <CardTitle className="text-sm font-medium">Total Projects</CardTitle>
                 <TrendingUp className="h-4 w-4 text-blue-600" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-blue-600">{stats.total_projects}</div>
                 <p className="text-xs text-muted-foreground">
-                  {stats.active_projects} activos
+                  {stats.active_projects} active
                 </p>
               </CardContent>
             </Card>
@@ -462,13 +462,13 @@ export default function UsersPage() {
         {/* Filters */}
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-lg">Filtros y Búsqueda</CardTitle>
+            <CardTitle className="text-lg">Filters and Search</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="flex space-x-2">
                 <Input
-                  placeholder="Buscar por nombre o email..."
+                  placeholder="Search by name or email..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyPress={handleKeyPress}
@@ -484,30 +484,30 @@ export default function UsersPage() {
 
               <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as any)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Estado" />
+                  <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos los estados</SelectItem>
-                  <SelectItem value="active">Activos</SelectItem>
-                  <SelectItem value="inactive">Inactivos</SelectItem>
-                  <SelectItem value="suspended">Suspendidos</SelectItem>
+                  <SelectItem value="all">All statuses</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                  <SelectItem value="suspended">Suspended</SelectItem>
                 </SelectContent>
               </Select>
 
               <Select value={roleFilter} onValueChange={(value) => setRoleFilter(value as any)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Rol" />
+                  <SelectValue placeholder="Role" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos los roles</SelectItem>
-                  <SelectItem value="admin">Administradores</SelectItem>
-                  <SelectItem value="user">Usuarios</SelectItem>
+                  <SelectItem value="all">All roles</SelectItem>
+                  <SelectItem value="admin">Administrators</SelectItem>
+                  <SelectItem value="user">Users</SelectItem>
                 </SelectContent>
               </Select>
 
               <div className="text-sm text-gray-600 flex items-center">
                 <Eye className="w-4 h-4 mr-1" />
-                {totalUsers} usuario(s) encontrado(s)
+                {totalUsers} user(s) found
               </div>
             </div>
           </CardContent>
@@ -516,16 +516,16 @@ export default function UsersPage() {
         {/* Users Table */}
         <Card>
           <CardHeader>
-            <CardTitle>Lista de Usuarios</CardTitle>
+            <CardTitle>Users List</CardTitle>
             <CardDescription>
-              Gestiona todos los usuarios del sistema
+              Manage all system users
             </CardDescription>
           </CardHeader>
           <CardContent>
             {loading ? (
               <div className="flex justify-center items-center py-8">
                 <RefreshCw className="w-6 h-6 animate-spin mr-2" />
-                Cargando usuarios...
+                Loading users...
               </div>
             ) : error ? (
               <Alert>
@@ -536,13 +536,13 @@ export default function UsersPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Usuario</TableHead>
+                      <TableHead>User</TableHead>
                       <TableHead>Email</TableHead>
-                      <TableHead>Rol</TableHead>
-                      <TableHead>Estado</TableHead>
-                      <TableHead>Registrado</TableHead>
-                      <TableHead>Último Acceso</TableHead>
-                      <TableHead>Acciones</TableHead>
+                      <TableHead>Role</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Registered</TableHead>
+                      <TableHead>Last Login</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -556,7 +556,7 @@ export default function UsersPage() {
                               </span>
                             </div>
                             <div>
-                              <div className="font-medium text-gray-900">{user.name || user.email || 'Usuario'}</div>
+                              <div className="font-medium text-gray-900">{user.name || user.email || 'User'}</div>
                               <div className="text-sm text-gray-500">ID: {user.id}</div>
                             </div>
                           </div>
@@ -576,7 +576,7 @@ export default function UsersPage() {
                               {formatDate(user.last_login)}
                             </div>
                           ) : (
-                            <span className="text-sm text-gray-400">Nunca</span>
+                            <span className="text-sm text-gray-400">Never</span>
                           )}
                         </TableCell>
                         <TableCell>
@@ -586,7 +586,7 @@ export default function UsersPage() {
                             onClick={() => handleManageUser(user)}
                           >
                             <Settings className="w-4 h-4 mr-1" />
-                            Gestionar
+                            Manage
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -598,7 +598,7 @@ export default function UsersPage() {
                 {totalPages > 1 && (
                   <div className="flex justify-between items-center mt-6">
                     <div className="text-sm text-gray-600">
-                      Mostrando {(currentPage - 1) * 20 + 1} a {Math.min(currentPage * 20, totalUsers)} de {totalUsers} usuarios
+                      Showing {(currentPage - 1) * 20 + 1} to {Math.min(currentPage * 20, totalUsers)} of {totalUsers} users
                     </div>
                     <div className="flex space-x-2">
                       <Button
@@ -607,10 +607,10 @@ export default function UsersPage() {
                         onClick={() => setPage(Math.max(currentPage - 1, 1))}
                         disabled={currentPage === 1}
                       >
-                        Anterior
+                        Previous
                       </Button>
                       <span className="flex items-center px-3 py-1 text-sm">
-                        Página {currentPage} de {totalPages}
+                        Page {currentPage} of {totalPages}
                       </span>
                       <Button
                         variant="outline"
@@ -618,7 +618,7 @@ export default function UsersPage() {
                         onClick={() => setPage(Math.min(currentPage + 1, totalPages))}
                         disabled={currentPage === totalPages}
                       >
-                        Siguiente
+                        Next
                       </Button>
                     </div>
                   </div>
@@ -632,9 +632,9 @@ export default function UsersPage() {
         <Dialog open={userModalOpen} onOpenChange={setUserModalOpen}>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>Gestionar Usuario</DialogTitle>
+              <DialogTitle>Manage User</DialogTitle>
               <DialogDescription>
-                Edita la información y permisos del usuario seleccionado
+                Edit information and permissions for the selected user
               </DialogDescription>
             </DialogHeader>
             
@@ -648,7 +648,7 @@ export default function UsersPage() {
                     </span>
                   </div>
                   <div>
-                    <div className="font-medium text-gray-900">{selectedUser.name || selectedUser.email || 'Usuario'}</div>
+                    <div className="font-medium text-gray-900">{selectedUser.name || selectedUser.email || 'User'}</div>
                     <div className="text-sm text-gray-500">{selectedUser.email}</div>
                     <div className="text-xs text-gray-400">ID: {selectedUser.id}</div>
                   </div>
@@ -656,7 +656,7 @@ export default function UsersPage() {
 
                 {/* Status Selection */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Estado</label>
+                  <label className="text-sm font-medium text-gray-700">Status</label>
                   <Select 
                     defaultValue={selectedUser.status}
                     onValueChange={(value) => handleUpdateUser({ status: value })}
@@ -669,19 +669,19 @@ export default function UsersPage() {
                       <SelectItem value="active">
                         <div className="flex items-center">
                           <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                          Activo
+                          Active
                         </div>
                       </SelectItem>
                       <SelectItem value="inactive">
                         <div className="flex items-center">
                           <div className="w-2 h-2 bg-gray-500 rounded-full mr-2"></div>
-                          Inactivo
+                          Inactive
                         </div>
                       </SelectItem>
                       <SelectItem value="suspended">
                         <div className="flex items-center">
                           <div className="w-2 h-2 bg-red-500 rounded-full mr-2"></div>
-                          Suspendido
+                          Suspended
                         </div>
                       </SelectItem>
                     </SelectContent>
@@ -690,7 +690,7 @@ export default function UsersPage() {
 
                 {/* Role Selection */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Rol</label>
+                  <label className="text-sm font-medium text-gray-700">Role</label>
                   <Select 
                     defaultValue={selectedUser.role}
                     onValueChange={(value) => handleUpdateUser({ role: value })}
@@ -703,13 +703,13 @@ export default function UsersPage() {
                       <SelectItem value="user">
                         <div className="flex items-center">
                           <Users className="w-4 h-4 mr-2" />
-                          Usuario
+                          User
                         </div>
                       </SelectItem>
                       <SelectItem value="admin">
                         <div className="flex items-center">
                           <Shield className="w-4 h-4 mr-2" />
-                          Administrador
+                          Administrator
                         </div>
                       </SelectItem>
                     </SelectContent>
@@ -718,18 +718,18 @@ export default function UsersPage() {
 
                 {/* User Stats */}
                 <div className="space-y-2 pt-4 border-t">
-                  <div className="text-sm font-medium text-gray-700">Información</div>
+                  <div className="text-sm font-medium text-gray-700">Information</div>
                   <div className="space-y-1 text-sm text-gray-600">
                     <div className="flex justify-between">
-                      <span>Fecha de registro:</span>
+                      <span>Registration date:</span>
                       <span>{formatDate(selectedUser.created_at)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Último acceso:</span>
+                      <span>Last login:</span>
                       <span>
                         {selectedUser.last_login 
                           ? formatDate(selectedUser.last_login) 
-                          : 'Nunca'
+                          : 'Never'
                         }
                       </span>
                     </div>
@@ -744,7 +744,7 @@ export default function UsersPage() {
                     onClick={() => handleDeleteUser(selectedUser.id)}
                     disabled={updating}
                   >
-                    Eliminar Usuario
+                    Delete User
                   </Button>
                   
                   <div className="flex space-x-2">
@@ -753,7 +753,7 @@ export default function UsersPage() {
                       onClick={() => setUserModalOpen(false)}
                       disabled={updating}
                     >
-                      Cerrar
+                      Close
                     </Button>
                   </div>
                 </div>
@@ -761,7 +761,7 @@ export default function UsersPage() {
                 {updating && (
                   <div className="flex items-center justify-center py-4">
                     <RefreshCw className="w-4 h-4 animate-spin mr-2" />
-                    Actualizando...
+                    Updating...
                   </div>
                 )}
               </div>

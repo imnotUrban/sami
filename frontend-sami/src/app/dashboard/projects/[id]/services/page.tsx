@@ -459,111 +459,91 @@ interface BackgroundStyle {
 }
 
 const backgroundStyles: Record<string, BackgroundStyle> = {
-  gradient: {
-    name: "Smooth Gradient",
+  light: {
+    name: "Light",
     config: {
       gap: 20,
-      size: 1.2,
-      color: "#a78bfa",
+      size: 1,
+      color: "#d1d5db",
       style: {
-        background: '#f8fafc',
-        backgroundImage: `radial-gradient(circle at center, #a78bfa 1.2px, transparent 1.2px)`,
+        background: '#ffffff',
       },
     },
   },
-  volcanic: {
-    name: "Volcanic",
+  blue: {
+    name: "Blue",
     config: {
-      gap: 18,
-      size: 2.0,
-      color: "#f87171",
-      style: {
-        background: '#fef2f2',
-        backgroundImage: `radial-gradient(circle at center, #f87171 2.0px, transparent 2.0px)`,
-      },
-    },
-  },
-  electric: {
-    name: "Electric",
-    config: {
-      gap: 15,
-      size: 2.5,
-      color: "#67e8f9",
+      gap: 20,
+      size: 1,
+      color: "#d1d5db",
       style: {
         background: '#f0f9ff',
-        backgroundImage: `radial-gradient(circle at center, #67e8f9 2.5px, transparent 2.5px)`,
       },
     },
   },
-  matrix: {
-    name: "Matrix",
-    config: {
-      gap: 12,
-      size: 3.0,
-      color: "#86efac",
-      style: {
-        background: '#f0fdf4',
-        backgroundImage: `radial-gradient(circle at center, #86efac 3.0px, transparent 3.0px)`,
-      },
-    },
-  },
-  inferno: {
-    name: "Inferno",
+  green: {
+    name: "Green",
     config: {
       gap: 20,
-      size: 2.2,
-      color: "#fde047",
+      size: 1,
+      color: "#d1d5db",
       style: {
-        background: '#fefce8',
-        backgroundImage: `radial-gradient(circle at center, #fde047 2.2px, transparent 2.2px)`,
+        background: '#f0fdf4',
       },
     },
   },
-  cosmic: {
-    name: "Cosmic",
+  purple: {
+    name: "Purple",
     config: {
-      gap: 25,
-      size: 1.8,
-      color: "#d8b4fe",
+      gap: 20,
+      size: 1,
+      color: "#d1d5db",
       style: {
         background: '#faf5ff',
-        backgroundImage: `radial-gradient(circle at center, #d8b4fe 1.8px, transparent 1.8px)`,
       },
     },
   },
-  arctic: {
-    name: "Arctic",
+  pink: {
+    name: "Pink",
     config: {
-      gap: 22,
-      size: 1.5,
-      color: "#60a5fa",
+      gap: 20,
+      size: 1,
+      color: "#d1d5db",
       style: {
-        background: '#eff6ff',
-        backgroundImage: `radial-gradient(circle at center, #60a5fa 1.5px, transparent 1.5px)`,
+        background: '#fdf2f8',
       },
     },
   },
-  laser: {
-    name: "Laser",
+  orange: {
+    name: "Orange",
     config: {
-      gap: 14,
-      size: 2.8,
-      color: "#fb923c",
+      gap: 20,
+      size: 1,
+      color: "#d1d5db",
       style: {
         background: '#fff7ed',
-        backgroundImage: `radial-gradient(circle at center, #fb923c 2.8px, transparent 2.8px)`,
       },
     },
   },
-  toxic: {
-    name: "Toxic",
+  red: {
+    name: "Red",
     config: {
-      gap: 16,
-      size: 2.4,
-      color: "#a3e635",
+      gap: 20,
+      size: 1,
+      color: "#d1d5db",
       style: {
-        background: '#f7fee7',
-        backgroundImage: `radial-gradient(circle at center, #a3e635 2.4px, transparent 2.4px)`,
+        background: '#fef2f2',
+      },
+    },
+  },
+  yellow: {
+    name: "Yellow",
+    config: {
+      gap: 20,
+      size: 1,
+      color: "#d1d5db",
+      style: {
+        background: '#fefce8',
       },
     },
   },
@@ -595,7 +575,7 @@ function ServiceDependencyFlow() {
   const [projectName, setProjectName] = useState<string>("")
   
   // Background selection state
-  const [selectedBackground, setSelectedBackground] = useState<string>('gradient')
+  const [selectedBackground, setSelectedBackground] = useState<string>('light')
   
   // Connection Types legend state - Initialize without localStorage to avoid hydration mismatch
   const [showConnectionTypes, setShowConnectionTypes] = useState<boolean>(true)
@@ -953,7 +933,7 @@ function ServiceDependencyFlow() {
             {/* Controls removed per user request */}
             
             {/* Background Selector */}
-            <div className="absolute top-12 left-4 z-20">
+            <div className="absolute top-2 left-2 z-20">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -980,9 +960,7 @@ function ServiceDependencyFlow() {
                         <div 
                           className="w-4 h-4 rounded border border-gray-300"
                           style={{
-                            background: style.config.style?.background || '#ffffff',
-                            backgroundImage: style.config.style?.backgroundImage || 'none',
-                            backgroundSize: style.config.gap ? `${style.config.gap}px ${style.config.gap}px` : 'auto',
+                            backgroundColor: style.config.style?.background || '#ffffff',
                           }}
                         />
                         {style.name}

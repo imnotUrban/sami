@@ -214,7 +214,7 @@ export default function HelpPage() {
               Built with ❤️ to help developers document their microservices better
             </p>
             <div className="flex justify-center gap-4">
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={() => window.open('https://github.com/imnotUrban/sami', '_blank')}>
                 <Github className="w-4 h-4 mr-2" />
                 View on GitHub
               </Button>

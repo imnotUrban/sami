@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: sami-db
+    environment:
+      POSTGRES_DB: microdocs
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: sami_password
+      ADMIN_EMAIL: admin@sami.local
+      ADMIN_PASSWORD: admin123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/db.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./init-admin.sql:/docker-entrypoint-initdb.d/02-admin.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - sami-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend Go API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sami-backend
+    environment:
+      - PORT=8080
+      - DATABASE_URL=host=db user=postgres password=sami_password dbname=microdocs port=5432 sslmode=disable TimeZone=UTC
+      - GIN_MODE=release
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - sami-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # Frontend Next.js
+  frontend:
+    build:
+      context: ./frontend-sami
+      dockerfile: Dockerfile
+    container_name: sami-frontend
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8080
+      - NODE_ENV=production
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - sami-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  sami-network:
+    driver: bridge 
