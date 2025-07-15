@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useCallback, useEffect } from "react"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import ReactFlow, {
   type Node,
   type Edge,
@@ -58,11 +58,10 @@ import {
 import { DependencyDialog } from "@/components/dependency-dialog"
 import { ServiceDialog } from "@/components/service-dialog"
 import CustomEdge from "@/components/custom-edge"
-import { ConnectionNotification } from "@/components/connection-notification"
 import { ConnectionStyles } from "@/components/connection-styles"
 import { useServicesFlow } from "@/lib/use-services-flow"
 import { type Service, type Dependency } from "@/lib/services-api"
-import {  CompactSaveStatus } from "@/components/save-status-indicator"
+import { CompactSaveStatus } from "@/components/save-status-indicator"
 import Layout from "@/components/Layout"
 import {
   DropdownMenu,
@@ -564,6 +563,7 @@ const isDependencySelected = (selectedDependency: Dependency | null, dependency:
 
 function ServiceDependencyFlow() {
   const params = useParams()
+  const router = useRouter()
   const projectId = parseInt(params.id as string)
   
   // State for project info
@@ -667,8 +667,6 @@ function ServiceDependencyFlow() {
   const [showDependencyForm, setShowDependencyForm] = useState(false)
   const [showServiceForm, setShowServiceForm] = useState(false)
   const [editingService, setEditingService] = useState<Service | null>(null)
-  const [showNotification, setShowNotification] = useState(false)
-  const [lastConnection] = useState<{ source: string; target: string } | null>(null)
   const [rightSidebarOpen, setRightSidebarOpen] = useState(true) // Right sidebar visibility state
 
   // Sync flow nodes/edges with hook data
@@ -681,32 +679,32 @@ function ServiceDependencyFlow() {
   }, [flowHook.edges, setEdges])
 
   // Fetch project info
-  const fetchProject = useCallback(async () => {
-    const token = localStorage.getItem('token')
-    if (!token) return
-
-    try {
-      const response = await fetch(`${API_URL}/projects/${projectId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        setProjectName(data.project?.name || `Project ${projectId}`)
-      }
-    } catch (error) {
-      console.error('Error fetching project:', error)
-    }
-  }, [projectId])
-
   useEffect(() => {
+    const fetchProject = async () => {
+      const token = localStorage.getItem('token')
+      if (!token) return
+
+      try {
+        const response = await fetch(`${API_URL}/projects/${projectId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          setProjectName(data.project?.name || `Project ${projectId}`)
+        }
+      } catch (error) {
+        console.error('Error fetching project:', error)
+      }
+    }
+
     if (projectId) {
       fetchProject()
     }
-  }, [projectId, fetchProject])
+  }, [projectId])
 
   // Event handlers
   const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
@@ -838,35 +836,34 @@ function ServiceDependencyFlow() {
   }, [flowHook])
 
   // Navigation with unsaved changes check
-  // TODO: Uncomment this function when navigation confirmation is needed
-  // const handleNavigation = useCallback((path: string) => {
-  //   if (flowHook.hasUnsavedChanges) {
-  //     const shouldSave = window.confirm(
-  //       'You have unsaved changes that will be lost. Do you want to save before leaving?'
-  //     )
+  const handleNavigation = useCallback((path: string) => {
+    if (flowHook.hasUnsavedChanges) {
+      const shouldSave = window.confirm(
+        'You have unsaved changes that will be lost. Do you want to save before leaving?'
+      )
       
-  //     if (shouldSave) {
-  //       // User wants to save first
-  //       flowHook.saveChanges(true).then(() => {
-  //         router.push(path)
-  //       }).catch((error) => {
-  //         console.error('Error saving before navigation:', error)
-  //         alert('Error saving changes. Please try again.')
-  //       })
-  //     } else {
-  //       // User doesn't want to save, navigate anyway
-  //       const confirmLeave = window.confirm(
-  //         'Are you sure you want to leave without saving? All changes will be lost.'
-  //       )
-  //       if (confirmLeave) {
-  //         router.push(path)
-  //       }
-  //     }
-  //   } else {
-  //     // No unsaved changes, navigate normally
-  //     router.push(path)
-  //   }
-  // }, [flowHook.hasUnsavedChanges, flowHook.saveChanges, router])
+      if (shouldSave) {
+        // User wants to save first
+        flowHook.saveChanges(true).then(() => {
+          router.push(path)
+        }).catch((error) => {
+          console.error('Error saving before navigation:', error)
+          alert('Error saving changes. Please try again.')
+        })
+      } else {
+        // User doesn't want to save, navigate anyway
+        const confirmLeave = window.confirm(
+          'Are you sure you want to leave without saving? All changes will be lost.'
+        )
+        if (confirmLeave) {
+          router.push(path)
+        }
+      }
+    } else {
+      // No unsaved changes, navigate normally
+      router.push(path)
+    }
+  }, [flowHook.hasUnsavedChanges, flowHook.saveChanges, router])
 
   // Atajos de teclado
   useEffect(() => {
@@ -1240,17 +1237,6 @@ function ServiceDependencyFlow() {
               )}
             </div>
           </ReactFlow>
-
-          {/* Notification */}
-          {showNotification && lastConnection && (
-            <ConnectionNotification
-              show={showNotification}
-              sourceNode={lastConnection.source}
-              targetNode={lastConnection.target}
-              onClose={() => setShowNotification(false)}
-              onEdit={() => {}}
-            />
-          )}
         </div>
 
         {/* Unified Sidebar */}

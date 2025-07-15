@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import Layout from '@/components/Layout';
+import Image from 'next/image';
 import { 
   Github, 
   Heart, 
@@ -24,10 +25,12 @@ export default function HelpPage() {
           {/* Header */}
           <div className="text-center mb-8">
             <div className="mb-4">
-              <img 
+              <Image 
                 src="/sami_logoxd.png" 
                 alt="SAMI Logo"
-                className="w-16 h-16 mx-auto object-contain"
+                width={64}
+                height={64}
+                className="mx-auto object-contain"
               />
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">SAMI</h1>
@@ -83,9 +86,11 @@ export default function HelpPage() {
               {/* Sami cat photo */}
               <div className="flex justify-center my-4">
                 <div className="text-center">
-                  <img 
+                  <Image 
                     src="/Sami_FOTO.png" 
                     alt="Sami the cat - inspiration for SAMI project name"
+                    width={128}
+                    height={128}
                     className="w-32 h-32 rounded-full object-cover border-4 border-gray-200 shadow-md mx-auto"
                   />
                   <p className="text-xs text-gray-500 mt-2">Meet Sami! 🐱</p>
@@ -94,8 +99,8 @@ export default function HelpPage() {
               
               <p className="text-gray-700 text-sm italic">
                 Fun fact: The name SAMI originally came from my cat Sami, who is quite lazy 
-                and loves to sleep. I then crafted the words "Service Architecture Management 
-                Interface" to match the name - just like how we want our documentation process 
+                and loves to sleep. I then crafted the words &quot;Service Architecture Management 
+                Interface&quot; to match the name - just like how we want our documentation process 
                 to be: effortless and peaceful! 🐱
               </p>
             </CardContent>
@@ -176,7 +181,7 @@ export default function HelpPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-gray-700">
-                We welcome contributions from the community! Whether you're fixing bugs, 
+                We welcome contributions from the community! Whether you&apos;re fixing bugs, 
                 adding new features, improving documentation, or sharing ideas, your 
                 contributions are valuable.
               </p>

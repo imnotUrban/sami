@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { 
   Users, 
@@ -90,11 +90,7 @@ export default function ProjectCollaborators({ projectId, isOwner = false }: Pro
     },
   });
 
-  useEffect(() => {
-    fetchCollaborators();
-  }, [projectId]);
-
-  const fetchCollaborators = async () => {
+  const fetchCollaborators = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -110,7 +106,11 @@ export default function ProjectCollaborators({ projectId, isOwner = false }: Pro
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [projectId]);
+
+  useEffect(() => {
+    fetchCollaborators();
+  }, [fetchCollaborators]);
 
   const handleAddCollaborator = async (data: AddCollaboratorFormData) => {
     try {
@@ -246,7 +246,7 @@ export default function ProjectCollaborators({ projectId, isOwner = false }: Pro
                 <DialogHeader>
                   <DialogTitle>Add Collaborator</DialogTitle>
                   <DialogDescription>
-                    Add a new collaborator to this project. Enter the user's email and select their role.
+                    Add a new collaborator to this project. Enter the user&apos;s email and select their role.
                   </DialogDescription>
                 </DialogHeader>
                 <Form {...form}>

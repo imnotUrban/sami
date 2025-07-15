@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   Plus, 
@@ -8,18 +8,16 @@ import {
   Trash2, 
   Eye, 
   Search, 
-  Filter,
   Globe,
   Lock,
   Calendar,
-  User,
   MoreHorizontal,
   Archive,
   FolderOpen
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -87,20 +85,16 @@ export default function ProjectsPage() {
     visibility: 'private'
   });
 
-  useEffect(() => {
-    fetchProjects();
-  }, []);
-
-  const getAuthToken = () => {
+  const getAuthToken = useCallback(() => {
     const token = localStorage.getItem('token');
     if (!token) {
       router.push('/login');
       return null;
     }
     return token;
-  };
+  }, [router]);
 
-  const fetchProjects = async () => {
+  const fetchProjects = useCallback(async () => {
     const token = getAuthToken();
     if (!token) return;
 
@@ -143,7 +137,11 @@ export default function ProjectsPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [router, getAuthToken]);
+
+  useEffect(() => {
+    fetchProjects();
+  }, [fetchProjects]);
 
   const generateSlug = (name: string) => {
     return name

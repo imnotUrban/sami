@@ -5,10 +5,8 @@ import { useRouter } from 'next/navigation';
 import { 
   Users, 
   UserCheck, 
-  UserX, 
   Shield, 
   Search, 
-  Filter,
   Calendar,
   TrendingUp,
   Settings,
@@ -31,21 +29,51 @@ import Layout from '@/components/Layout';
 import { useAdminUsers, useAdminPermissions } from '@/lib/use-admin';
 import { adminApi, InviteUserData } from '@/lib/api';
 
+// User interface
+interface User {
+  id: number;
+  name?: string;
+  email: string;
+  role: string;
+  status: string;
+  created_at: string;
+  last_login?: string;
+  full_name?: string;
+}
+
+// Invite result interface
+interface InviteResult {
+  user: User;
+  password: string;
+}
+
+// Error interface
+interface ApiError {
+  message: string;
+}
+
+// Filters interface
+interface UserFilters {
+  search?: string;
+  status?: 'active' | 'inactive' | 'suspended';
+  role?: 'user' | 'admin';
+}
+
 export default function UsersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'suspended'>('all');
   const [roleFilter, setRoleFilter] = useState<'all' | 'user' | 'admin'>('all');
-  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [userModalOpen, setUserModalOpen] = useState(false);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [inviting, setInviting] = useState(false);
-  const [inviteResult, setInviteResult] = useState<{ user: any; password: string } | null>(null);
+  const [inviteResult, setInviteResult] = useState<InviteResult | null>(null);
   const [passwordCopied, setPasswordCopied] = useState(false);
   const router = useRouter();
 
   // Helper function to get user initials safely
-  const getUserInitials = (user: any): string => {
+  const getUserInitials = (user: User): string => {
     if (!user) return 'U';
     
     // Try different name fields
@@ -82,21 +110,21 @@ export default function UsersPage() {
   }, [isAdmin, permissionsLoading, router]);
 
   const handleSearch = () => {
-    const filters: any = {};
+    const filters: UserFilters = {};
     
     if (searchTerm.trim()) {
       filters.search = searchTerm.trim();
     }
     
     if (statusFilter !== 'all') {
-      filters.status = statusFilter;
+      filters.status = statusFilter as 'active' | 'inactive' | 'suspended';
     }
     
     if (roleFilter !== 'all') {
-      filters.role = roleFilter;
+      filters.role = roleFilter as 'user' | 'admin';
     }
     
-    setFilters(filters);
+    setFilters(filters as unknown as Parameters<typeof setFilters>[0]);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -105,7 +133,7 @@ export default function UsersPage() {
     }
   };
 
-  const handleManageUser = (user: any) => {
+  const handleManageUser = (user: User) => {
     setSelectedUser(user);
     setUserModalOpen(true);
   };
@@ -123,9 +151,9 @@ export default function UsersPage() {
       setSelectedUser(null);
       await refresh();
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating user:', error);
-      alert('Error updating user: ' + (error.message || 'Unknown error'));
+      alert('Error updating user: ' + ((error as ApiError).message || 'Unknown error'));
     } finally {
       setUpdating(false);
     }
@@ -144,9 +172,9 @@ export default function UsersPage() {
       setSelectedUser(null);
       await refresh();
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error deleting user:', error);
-      alert('Error deleting user: ' + (error.message || 'Unknown error'));
+      alert('Error deleting user: ' + ((error as ApiError).message || 'Unknown error'));
     } finally {
       setUpdating(false);
     }
@@ -167,9 +195,9 @@ export default function UsersPage() {
       const result = await adminApi.inviteUser(inviteData);
       setInviteResult(result);
       await refresh(); // Refrescar la lista de usuarios
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error inviting user:', error);
-      alert('Error inviting user: ' + (error.message || 'Unknown error'));
+      alert('Error inviting user: ' + ((error as ApiError).message || 'Unknown error'));
     } finally {
       setInviting(false);
     }
@@ -242,7 +270,7 @@ export default function UsersPage() {
         <div className="container mx-auto px-4 py-8">
           <Alert>
             <Shield className="h-4 w-4" />
-            <AlertDescription>You don't have permission to access this page</AlertDescription>
+            <AlertDescription>You don&apos;t have permission to access this page</AlertDescription>
           </Alert>
         </div>
       </Layout>
@@ -482,7 +510,7 @@ export default function UsersPage() {
                 </Button>
               </div>
 
-              <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as any)}>
+              <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as 'all' | 'active' | 'inactive' | 'suspended')}>
                 <SelectTrigger>
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
@@ -494,7 +522,7 @@ export default function UsersPage() {
                 </SelectContent>
               </Select>
 
-              <Select value={roleFilter} onValueChange={(value) => setRoleFilter(value as any)}>
+              <Select value={roleFilter} onValueChange={(value) => setRoleFilter(value as 'all' | 'user' | 'admin')}>
                 <SelectTrigger>
                   <SelectValue placeholder="Role" />
                 </SelectTrigger>

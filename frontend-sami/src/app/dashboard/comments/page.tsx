@@ -4,15 +4,13 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { formatDistanceToNow } from 'date-fns';
 import Layout from '@/components/Layout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   MessageCircle, 
-  Search, 
   AlertTriangle, 
   Lightbulb, 
   MessageSquare, 
@@ -22,7 +20,7 @@ import {
   Trash2,
   FolderOpen
 } from 'lucide-react';
-import { commentApi, projectApi, Comment, Project } from '@/lib/api';
+import { commentApi, projectApi, Comment, Project, User } from '@/lib/api';
 
 interface CommentsStats {
   total: number;
@@ -133,7 +131,7 @@ export default function CommentsPage() {
   }, [selectedType, selectedProject]);
 
   // Organize comments into hierarchy and filter
-  const { topLevelComments, filteredComments } = useMemo(() => {
+  const filteredComments = useMemo(() => {
     // Filter out deleted comments first
     const activeComments = allComments.filter(comment => !comment.deleted_at);
     
@@ -175,11 +173,8 @@ export default function CommentsPage() {
       replies: comment.replies.filter(reply => matchesFilters(reply))
     }));
 
-    return {
-      topLevelComments: commentsWithReplies,
-      filteredComments: filtered
-    };
-  }, [allComments, selectedType, selectedProject, matchesFilters]);
+    return filtered;
+  }, [allComments, matchesFilters]);
 
   // Get project name for a comment
   const getProjectName = (projectId: number) => {
@@ -188,9 +183,9 @@ export default function CommentsPage() {
   };
 
   // Get user display name with fallback
-  const getUserDisplayName = (user: any) => {
+  const getUserDisplayName = (user: User | null | undefined) => {
     if (!user) return 'Unknown User';
-    return user.full_name || user.name || user.email || 'Unknown User';
+    return user.name || user.email || 'Unknown User';
   };
 
   // Get user initials

@@ -2,18 +2,14 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Layout from '@/components/Layout';
 import { 
   Shield, 
   FolderOpen, 
-  Users, 
   MessageCircle,
   Network,
-  History,
   UserCheck,
-  Heart,
   BookOpen,
   Code,
   Server
@@ -333,7 +329,16 @@ export default function DocsPage() {
     }
   };
 
-  const EndpointCard = ({ endpoint, category }: { endpoint: any, category: string }) => (
+  interface ApiEndpoint {
+    method: string;
+    path: string;
+    description: string;
+    auth?: boolean;
+    admin?: boolean;
+    body?: string;
+  }
+
+  const EndpointCard = ({ endpoint }: { endpoint: ApiEndpoint }) => (
     <Card className="mb-4">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
@@ -435,7 +440,7 @@ export default function DocsPage() {
                 </CardHeader>
               </Card>
               {endpoints.auth.map((endpoint, index) => (
-                <EndpointCard key={index} endpoint={endpoint} category="auth" />
+                <EndpointCard key={index} endpoint={endpoint} />
               ))}
             </TabsContent>
 
@@ -453,7 +458,7 @@ export default function DocsPage() {
                 </CardHeader>
               </Card>
               {endpoints.projects.map((endpoint, index) => (
-                <EndpointCard key={index} endpoint={endpoint} category="projects" />
+                <EndpointCard key={index} endpoint={endpoint} />
               ))}
             </TabsContent>
 
@@ -471,7 +476,7 @@ export default function DocsPage() {
                 </CardHeader>
               </Card>
               {endpoints.services.map((endpoint, index) => (
-                <EndpointCard key={index} endpoint={endpoint} category="services" />
+                <EndpointCard key={index} endpoint={endpoint} />
               ))}
             </TabsContent>
 
@@ -489,7 +494,7 @@ export default function DocsPage() {
                 </CardHeader>
               </Card>
               {endpoints.dependencies.map((endpoint, index) => (
-                <EndpointCard key={index} endpoint={endpoint} category="dependencies" />
+                <EndpointCard key={index} endpoint={endpoint} />
               ))}
             </TabsContent>
 
@@ -507,7 +512,7 @@ export default function DocsPage() {
                 </CardHeader>
               </Card>
               {endpoints.comments.map((endpoint, index) => (
-                <EndpointCard key={index} endpoint={endpoint} category="comments" />
+                <EndpointCard key={index} endpoint={endpoint} />
               ))}
             </TabsContent>
 
@@ -525,7 +530,7 @@ export default function DocsPage() {
                 </CardHeader>
               </Card>
               {endpoints.admin.map((endpoint, index) => (
-                <EndpointCard key={index} endpoint={endpoint} category="admin" />
+                <EndpointCard key={index} endpoint={endpoint} />
               ))}
             </TabsContent>
           </Tabs>
@@ -540,9 +545,9 @@ export default function DocsPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <h4 className="font-medium text-gray-900 mb-2">JWT Token</h4>
-                <p className="text-sm text-gray-700 mb-2">
-                  All endpoints marked with "Auth Required" need a JWT token in the header:
+                <h4 className="font-medium text-gray-900 mb-2">Authentication Required</h4>
+                <p className="text-sm text-gray-700">
+                  All endpoints marked with &quot;Auth Required&quot; need a JWT token in the header:
                 </p>
                 <pre className="bg-gray-50 border rounded p-3 text-xs">
                   <code>Authorization: Bearer your-jwt-token-here</code>
@@ -557,7 +562,7 @@ export default function DocsPage() {
               <div>
                 <h4 className="font-medium text-gray-900 mb-2">Admin Permissions</h4>
                 <p className="text-sm text-gray-700">
-                  Endpoints marked with "Admin Only" require the user to have administrator role.
+                  Endpoints marked with &quot;Admin Only&quot; require the user to have administrator role.
                 </p>
               </div>
             </CardContent>

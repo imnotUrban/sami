@@ -225,7 +225,6 @@ export const useServicesStore = create<ServicesState>()(
       get().saveToHistory('Remove Dependency')
       
       set((state) => {
-        const dependencyToDelete = state.dependencies.find(d => d.id === dependencyId)
         
         // Si la dependencia tiene ID temporal (negativo), solo removerla del estado local
         if (dependencyId < 0) {

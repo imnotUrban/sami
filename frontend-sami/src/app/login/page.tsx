@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import Image from 'next/image';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
@@ -54,7 +55,8 @@ export default function LoginPage() {
         const errorData = await response.json();
         setError(errorData.error || 'Login failed');
       }
-    } catch (err) {
+    } catch (error) {
+      console.error('Login error:', error);
       setError('Connection error. Please verify the server is running.');
     } finally {
       setIsLoading(false);
@@ -68,9 +70,11 @@ export default function LoginPage() {
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-purple-50/50"></div>
         <div className="relative z-10 max-w-3xl w-full">
           <div className="bg-white rounded-2xl shadow-2xl p-4 border border-gray-200/50 backdrop-blur-sm">
-            <img 
+            <Image 
               src="/app_capture.png" 
               alt="SAMI - System Architecture Mapping Interface" 
+              width={800}
+              height={600}
               className="w-full h-auto rounded-xl object-contain"
               style={{ maxHeight: '70vh' }}
             />
@@ -80,7 +84,7 @@ export default function LoginPage() {
               Visualize Your Architecture
             </h2>
             <p className="text-gray-600 text-sm max-w-md mx-auto">
-              Map, connect, and understand your microservices ecosystem with SAMI's intuitive interface
+              Map, connect, and understand your microservices ecosystem with SAMI&apos;s intuitive interface
             </p>
           </div>
         </div>
@@ -91,9 +95,11 @@ export default function LoginPage() {
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <div className="mb-6">
-              <img 
+              <Image 
                 src="/sami_logoxd.png" 
                 alt="SAMI Logo"
+                width={96}
+                height={96}
                 className="w-24 h-24 mx-auto object-contain"
               />
             </div>

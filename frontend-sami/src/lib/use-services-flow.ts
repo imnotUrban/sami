@@ -106,7 +106,7 @@ export function useServicesFlow({
 
   // Convertir dependencies a edges para React Flow
   const edges: Edge[] = useMemo(() => {
-    return dependencies.map((dep, index) => {
+    return dependencies.map((dep, ) => {
       // Lógica para determinar el estilo del edge basado en tipo y protocolo
       const getEdgeStyle = (type: string, protocol: string) => {
         const lowerType = type?.toLowerCase() || ''

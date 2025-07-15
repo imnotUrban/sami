@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import Image from 'next/image';
+import Link from 'next/link';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
@@ -51,7 +53,7 @@ export default function RegisterPage() {
         const errorData = await response.json();
         setError(errorData.error || 'Registration failed');
       }
-    } catch (err) {
+    } catch (_) {
       setError('Connection error. Please verify the server is running.');
     } finally {
       setIsLoading(false);
@@ -74,9 +76,11 @@ export default function RegisterPage() {
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <div className="mb-4">
-              <img 
+              <Image 
                 src="/sami_logoxd.png" 
                 alt="SAMI Logo"
+                width={64}
+                height={64}
                 className="w-16 h-16 mx-auto object-contain"
               />
             </div>
@@ -162,12 +166,12 @@ export default function RegisterPage() {
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
                 Already have an account?{' '}
-                <a 
+                <Link 
                   href="/login" 
                   className="text-gray-900 hover:underline font-medium"
                 >
                   Sign in here
-                </a>
+                </Link>
               </p>
             </div>
           </CardContent>

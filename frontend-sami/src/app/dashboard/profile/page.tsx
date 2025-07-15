@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { 
   User, 
@@ -73,12 +73,7 @@ export default function ProfilePage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isEditingProfile, setIsEditingProfile] = useState(false)
 
-  // Load user profile
-  useEffect(() => {
-    loadProfile()
-  }, [])
-
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => {
     setLoading(true)
     setError(null)
     
@@ -119,7 +114,12 @@ export default function ProfilePage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [router])
+
+  // Load user profile
+  useEffect(() => {
+    loadProfile()
+  }, [loadProfile])
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault()

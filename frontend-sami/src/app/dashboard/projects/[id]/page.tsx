@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { 
@@ -11,22 +11,13 @@ import {
   Lock,
   Calendar,
   User,
-  Settings,
   Activity,
-  Share2,
   Server,
-  Users,
-  GitBranch,
-  Clock,
-  Database,
-  Zap,
-  Plus,
   MessageCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { 
   Dialog,
@@ -40,7 +31,6 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -104,44 +94,16 @@ export default function ProjectDetailPage() {
     },
   });
 
-  useEffect(() => {
-    if (projectId) {
-      fetchProject();
-    }
-  }, [projectId]);
-
-  // Actualizar valores del formulario cuando se carga el proyecto
-  useEffect(() => {
-    if (project) {
-      form.reset({
-        name: project.name,
-        description: project.description,
-        visibility: project.visibility,
-      });
-    }
-  }, [project, form]);
-
-  const getAuthToken = () => {
+  const getAuthToken = useCallback(() => {
     const token = localStorage.getItem('token');
     if (!token) {
       router.push('/login');
       return null;
     }
     return token;
-  };
+  }, [router]);
 
-  const getCurrentUserId = () => {
-    const userStr = localStorage.getItem('user');
-    if (!userStr) return null;
-    try {
-      const user = JSON.parse(userStr);
-      return user.id;
-    } catch {
-      return null;
-    }
-  };
-
-  const fetchProject = async () => {
+  const fetchProject = useCallback(async () => {
     const token = getAuthToken();
     if (!token) return;
 
@@ -168,6 +130,34 @@ export default function ProjectDetailPage() {
       setError('Failed to load project');
     } finally {
       setIsLoading(false);
+    }
+  }, [projectId, router, getAuthToken]);
+
+  useEffect(() => {
+    if (projectId) {
+      fetchProject();
+    }
+  }, [projectId, fetchProject]);
+
+  // Actualizar valores del formulario cuando se carga el proyecto
+  useEffect(() => {
+    if (project) {
+      form.reset({
+        name: project.name,
+        description: project.description,
+        visibility: project.visibility,
+      });
+    }
+  }, [project, form]);
+
+  const getCurrentUserId = () => {
+    const userStr = localStorage.getItem('user');
+    if (!userStr) return null;
+    try {
+      const user = JSON.parse(userStr);
+      return user.id;
+    } catch {
+      return null;
     }
   };
 

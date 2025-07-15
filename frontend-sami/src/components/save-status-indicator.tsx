@@ -30,7 +30,6 @@ interface SaveStatusIndicatorProps {
 }
 
 export function SaveStatusIndicator({
-  isDirty,
   lastSaved,
   savingInProgress,
   autoSaveEnabled,
@@ -181,7 +180,6 @@ export function SaveStatusIndicator({
 
 // Componente más compacto para usar en la barra superior
 export function CompactSaveStatus({
-  isDirty,
   lastSaved,
   savingInProgress,
   autoSaveEnabled,

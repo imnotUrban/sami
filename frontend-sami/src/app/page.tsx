@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import Image from 'next/image';
 
 export default function Home() {
   const router = useRouter();
@@ -11,9 +12,11 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center p-8">
       <div className="text-center">
         <div className="mb-8">
-          <img 
+          <Image 
             src="/sami_logoxd.png" 
             alt="SAMI - System Architecture Mapping Interface"
+            width={384}
+            height={384}
             className="w-96 h-auto mx-auto object-contain"
           />
         </div>

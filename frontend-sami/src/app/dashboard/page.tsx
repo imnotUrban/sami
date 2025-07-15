@@ -2,13 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { User, FolderOpen, MessageSquare, BarChart3 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { User, FolderOpen, MessageSquare } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Layout from '@/components/Layout';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 interface User {
   id: number;
@@ -98,7 +96,7 @@ export default function DashboardPage() {
             Welcome back, {user.name}!
           </h1>
           <p className="text-gray-600">
-            Here's an overview of your architecture system
+            Here&apos;s an overview of your architecture system
           </p>
         </div>
         

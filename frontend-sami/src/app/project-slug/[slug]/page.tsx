@@ -1,14 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { 
   ArrowLeft, 
   Globe,
   Calendar,
   User,
-  Activity,
-  ExternalLink
+  Activity
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -47,13 +46,7 @@ export default function PublicProjectPage() {
   
   const slug = params.slug as string;
 
-  useEffect(() => {
-    if (slug) {
-      fetchProjectBySlug();
-    }
-  }, [slug]);
-
-  const fetchProjectBySlug = async () => {
+  const fetchProjectBySlug = useCallback(async () => {
     try {
       // Fetch public project by slug
       const response = await fetch(`${API_URL}/projects/public/${slug}`, {
@@ -78,7 +71,13 @@ export default function PublicProjectPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [slug]);
+
+  useEffect(() => {
+    if (slug) {
+      fetchProjectBySlug();
+    }
+  }, [slug, fetchProjectBySlug]);
 
   if (isLoading) {
     return (
