@@ -180,12 +180,12 @@ export function useServicesFlow({
 
   // Handlers optimizados para React Flow
 
-  const handleNodeDragStart = useCallback((event: any, node: Node) => {
+  const handleNodeDragStart = useCallback(() => {
     // Guardar historial antes de empezar el drag
     useServicesStore.getState().saveToHistory('Move Service')
   }, [])
 
-  const handleNodeDragStop = useCallback((event: any, node: Node) => {
+  const handleNodeDragStop = useCallback((_event: unknown, node: Node) => {
     // Solo actualiza la posición localmente, se guardará con autosave
     updateService(parseInt(node.id), {
       pos_x: node.position.x,
@@ -212,7 +212,7 @@ export function useServicesFlow({
 
     // Agregar localmente - se guardará con autosave o manualmente
     addDependency(newDependency)
-  }, [services, projectId, addDependency])
+  }, [services, addDependency])
 
   // Funciones para manejo de servicios
   const createService = useCallback(async (serviceData: Partial<Service>) => {
@@ -264,7 +264,7 @@ export function useServicesFlow({
     
     addDependency(newDependency)
     return newDependency
-  }, [projectId, addDependency])
+  }, [addDependency])
 
   const editDependency = useCallback(async (dependencyId: number, updates: Partial<Dependency>) => {
     updateDependency(dependencyId, updates)

@@ -63,7 +63,7 @@ import { ConnectionStyles } from "@/components/connection-styles"
 import { useServicesFlow } from "@/lib/use-services-flow"
 import { type Service, type Dependency } from "@/lib/services-api"
 import {  CompactSaveStatus } from "@/components/save-status-indicator"
-import Layout from "@/components/Layout"
+import Sidebar from "@/components/Sidebar"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -71,7 +71,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
+
 
 // Custom Node Components  
 const ServiceNode = ({ data }: { data: Service }) => {
@@ -566,23 +566,36 @@ function ServiceDependencyFlow() {
   const params = useParams()
   const projectId = parseInt(params.id as string)
   
-  // State for project info
-  const [projectName, setProjectName] = useState<string>("")
+
   
-  // Background selection state
-  const [selectedBackground, setSelectedBackground] = useState<string>('light')
+  // Background selection state - Initialize without localStorage to avoid hydration mismatch
+  const [selectedBackground, setSelectedBackground] = useState<string>('clean')
   
   // Connection Types legend state - Initialize without localStorage to avoid hydration mismatch
-  const [showConnectionTypes, setShowConnectionTypes] = useState<boolean>(true)
+  const [showConnectionTypes, setShowConnectionTypes] = useState<boolean>(false)
   
   // Service Types legend state - Initialize without localStorage to avoid hydration mismatch
-  const [showServiceTypes, setShowServiceTypes] = useState<boolean>(true)
+  const [showServiceTypes, setShowServiceTypes] = useState<boolean>(false)
+  
+  // Left sidebar state
+  const [sidebarOpen, setSidebarOpen] = useState(false) // Mobile sidebar state
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false) // Desktop sidebar collapsed state
+  
+  // Sidebar functions
+  const closeSidebar = () => {
+    setSidebarOpen(false)
+  }
+
+  const toggleSidebarCollapse = () => {
+    setSidebarCollapsed(!sidebarCollapsed)
+  }
   
   // Initialize states from localStorage after hydration
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedConnectionTypes = localStorage.getItem('sami-show-connection-types')
       const savedServiceTypes = localStorage.getItem('sami-show-service-types')
+      const savedBackground = localStorage.getItem('sami-background-theme')
       
       if (savedConnectionTypes !== null) {
         setShowConnectionTypes(JSON.parse(savedConnectionTypes))
@@ -590,6 +603,10 @@ function ServiceDependencyFlow() {
       
       if (savedServiceTypes !== null) {
         setShowServiceTypes(JSON.parse(savedServiceTypes))
+      }
+      
+      if (savedBackground !== null) {
+        setSelectedBackground(savedBackground)
       }
     }
   }, [])
@@ -607,6 +624,13 @@ function ServiceDependencyFlow() {
       localStorage.setItem('sami-show-service-types', JSON.stringify(showServiceTypes))
     }
   }, [showServiceTypes])
+  
+  // Save background theme state
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('sami-background-theme', selectedBackground)
+    }
+  }, [selectedBackground])
   
   // Use the optimized flow hook
   const flowHook = useServicesFlow({ 
@@ -669,7 +693,7 @@ function ServiceDependencyFlow() {
   const [editingService, setEditingService] = useState<Service | null>(null)
   const [showNotification, setShowNotification] = useState(false)
   const [lastConnection] = useState<{ source: string; target: string } | null>(null)
-  const [rightSidebarOpen, setRightSidebarOpen] = useState(true) // Right sidebar visibility state
+  const [rightSidebarOpen, setRightSidebarOpen] = useState(false) // Right sidebar visibility state
 
   // Sync flow nodes/edges with hook data
   useEffect(() => {
@@ -680,33 +704,7 @@ function ServiceDependencyFlow() {
     setEdges(flowHook.edges)
   }, [flowHook.edges, setEdges])
 
-  // Fetch project info
-  const fetchProject = useCallback(async () => {
-    const token = localStorage.getItem('token')
-    if (!token) return
 
-    try {
-      const response = await fetch(`${API_URL}/projects/${projectId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        setProjectName(data.project?.name || `Project ${projectId}`)
-      }
-    } catch (error) {
-      console.error('Error fetching project:', error)
-    }
-  }, [projectId])
-
-  useEffect(() => {
-    if (projectId) {
-      fetchProject()
-    }
-  }, [projectId, fetchProject])
 
   // Event handlers
   const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
@@ -883,20 +881,29 @@ function ServiceDependencyFlow() {
 
   if (flowHook.loading) {
     return (
-      <Layout title="Services">
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading services...</p>
-          </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading services...</p>
         </div>
-      </Layout>
+      </div>
     )
   }
 
   return (
-    <Layout title={projectName || "Services"}>
-      <div className="h-[calc(100vh-5rem)] flex">
+    <div className="min-h-screen bg-gray-50">
+      {/* Sidebar */}
+      <Sidebar 
+        isOpen={sidebarOpen} 
+        onClose={closeSidebar}
+        isCollapsed={sidebarCollapsed}
+        onToggleCollapse={toggleSidebarCollapse}
+      />
+      
+      {/* Main Content Area */}
+      <div className={`h-screen flex transition-all duration-300 ${
+        sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64'
+      }`}>
         {/* React Flow Canvas */}
         <div className="flex-1 relative">
           <ReactFlow
@@ -1942,25 +1949,25 @@ function ServiceDependencyFlow() {
             </>
           )}
         </div>
+
+        {/* Dialogs */}
+        <ServiceDialog
+          open={showServiceForm}
+          onOpenChange={setShowServiceForm}
+          onSave={handleSaveService}
+          service={editingService}
+        />
+
+        <DependencyDialog
+          open={showDependencyForm}
+          onOpenChange={setShowDependencyForm}
+          onSave={handleSaveDependency}
+          onDelete={handleDeleteDependency}
+          services={flowHook.services}
+          dependency={selectedDependency || undefined}
+        />
       </div>
-
-      {/* Dialogs */}
-      <ServiceDialog
-        open={showServiceForm}
-        onOpenChange={setShowServiceForm}
-        onSave={handleSaveService}
-        service={editingService}
-      />
-
-      <DependencyDialog
-        open={showDependencyForm}
-        onOpenChange={setShowDependencyForm}
-        onSave={handleSaveDependency}
-        onDelete={handleDeleteDependency}
-        services={flowHook.services}
-        dependency={selectedDependency}
-      />
-    </Layout>
+    </div>
   )
 }
 

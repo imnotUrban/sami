@@ -9,8 +9,10 @@ const nextConfig: NextConfig = {
     unoptimized: true,
   },
   
-  // Disable telemetry
-  telemetry: false,
+  // Experimental features
+  experimental: {
+    // Any experimental features can go here
+  },
 };
 
 export default nextConfig;

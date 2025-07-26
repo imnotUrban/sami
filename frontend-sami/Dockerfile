@@ -1,28 +1,37 @@
 # Dependencies stage
 FROM node:18-alpine AS deps
-RUN apk add --no-cache libc6-compat
+# Add libc compatibility and python3 for native dependencies
+RUN apk add --no-cache libc6-compat python3 make g++
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-RUN npm ci --only=production
+# Install all dependencies (including devDependencies for build)
+RUN npm ci
 
 # Builder stage
 FROM node:18-alpine AS builder
+# Add build dependencies for native modules
+RUN apk add --no-cache libc6-compat python3 make g++
 WORKDIR /app
 
 # Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Disable telemetry during the build
-ENV NEXT_TELEMETRY_DISABLED 1
+# Set environment variables for build
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
+ENV NPM_CONFIG_PLATFORM=linux
+ENV NPM_CONFIG_TARGET_PLATFORM=linux
 
 # Build the application
 RUN npm run build
 
 # Runner stage
 FROM node:18-alpine AS runner
+# Add curl for health check
+RUN apk add --no-cache curl
 WORKDIR /app
 
 # Don't run as root

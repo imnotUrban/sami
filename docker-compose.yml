@@ -16,7 +16,7 @@ services:
       - ./backend/db.sql:/docker-entrypoint-initdb.d/01-schema.sql
       - ./init-admin.sql:/docker-entrypoint-initdb.d/02-admin.sql
     ports:
-      - "5432:5432"
+      - "5433:5432"
     networks:
       - sami-network
     healthcheck:

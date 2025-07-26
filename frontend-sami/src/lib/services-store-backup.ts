@@ -2,13 +2,51 @@
 
 import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
-import { servicesApi, dependenciesApi, containersApi, bulkApi, type Service, type Dependency, type Container, type BulkSaveRequest } from '@/lib/services-api'
+import { servicesApi, dependenciesApi, bulkApi, type Service, type Dependency, type BulkSaveRequest } from '@/lib/services-api'
+
+interface ServiceBaseFields {
+  pos_x: number
+  pos_y: number
+  name?: string
+  description?: string
+  type?: string
+  version?: string
+  language?: string
+  environment?: string
+  deploy_url?: string
+  domain?: string
+  git_repo?: string
+  notes?: string
+  status?: string
+}
+
+interface DependencyBaseFields {
+  source_id: number
+  target_id: number
+  type?: string
+  description?: string
+  protocol?: string
+  method?: string
+}
+
+interface PendingChanges {
+  services: Set<number>
+  dependencies: Set<number>
+  deletedServices: Set<number>
+  deletedDependencies: Set<number>
+}
+
+interface HistoryEntry {
+  services: Service[]
+  dependencies: Dependency[]
+  timestamp: Date
+  action: string
+}
 
 interface ServicesState {
   // Estado principal
   services: Service[]
   dependencies: Dependency[]
-  containers: Container[]
   projectId: number | null
   loading: boolean
   error: string | null
@@ -22,23 +60,10 @@ interface ServicesState {
   autoSaveCountdown: number // segundos restantes para el próximo auto-guardado
   
   // Metadatos para seguimiento de cambios
-  pendingChanges: {
-    services: Set<number>
-    dependencies: Set<number>
-    containers: Set<number>
-    deletedServices: Set<number>
-    deletedDependencies: Set<number>
-    deletedContainers: Set<number>
-  }
+  pendingChanges: PendingChanges
   
   // Sistema de undo
-  history: Array<{
-    services: Service[]
-    dependencies: Dependency[]
-    containers: Container[]
-    timestamp: Date
-    action: string
-  }>
+  history: HistoryEntry[]
   currentHistoryIndex: number
   maxHistorySize: number
   
@@ -54,10 +79,6 @@ interface ServicesState {
   addDependency: (dependency: Dependency) => void
   updateDependency: (dependencyId: number, updates: Partial<Dependency>) => void
   removeDependency: (dependencyId: number) => void
-  
-  addContainer: (container: Container) => void
-  updateContainer: (containerId: number, updates: Partial<Container>) => void
-  removeContainer: (containerId: number) => void
   
   // Acciones de persistencia
   saveToServer: (token: string, force?: boolean) => Promise<boolean>
@@ -87,7 +108,6 @@ export const useServicesStore = create<ServicesState>()(
     // Estado inicial
     services: [],
     dependencies: [],
-    containers: [],
     projectId: null,
     loading: false,
     error: null,
@@ -102,10 +122,8 @@ export const useServicesStore = create<ServicesState>()(
     pendingChanges: {
       services: new Set<number>(),
       dependencies: new Set<number>(),
-      containers: new Set<number>(),
       deletedServices: new Set<number>(),
       deletedDependencies: new Set<number>(),
-      deletedContainers: new Set<number>(),
     },
     
     history: [],
@@ -144,7 +162,6 @@ export const useServicesStore = create<ServicesState>()(
           currentHistoryIndex: -1
         })
         
-        // No guardar estado inicial vacío en el historial automáticamente
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Error loading data'
         set({ error: errorMessage, loading: false })
@@ -236,8 +253,6 @@ export const useServicesStore = create<ServicesState>()(
       get().saveToHistory('Remove Dependency')
       
       set((state) => {
-        const dependencyToDelete = state.dependencies.find(d => d.id === dependencyId)
-        
         // Si la dependencia tiene ID temporal (negativo), solo removerla del estado local
         if (dependencyId < 0) {
           return {
@@ -255,13 +270,13 @@ export const useServicesStore = create<ServicesState>()(
         
         // Si la dependencia tiene ID real (positivo), marcarla para eliminación en servidor
         return {
-        dependencies: state.dependencies.filter(d => d.id !== dependencyId),
-        isDirty: true,
-        pendingChanges: {
-          ...state.pendingChanges,
-          deletedDependencies: new Set([...state.pendingChanges.deletedDependencies, dependencyId]),
-          dependencies: new Set([...state.pendingChanges.dependencies].filter(id => id !== dependencyId))
-        }
+          dependencies: state.dependencies.filter(d => d.id !== dependencyId),
+          isDirty: true,
+          pendingChanges: {
+            ...state.pendingChanges,
+            deletedDependencies: new Set([...state.pendingChanges.deletedDependencies, dependencyId]),
+            dependencies: new Set([...state.pendingChanges.dependencies].filter(id => id !== dependencyId))
+          }
         }
       })
     },
@@ -297,10 +312,10 @@ export const useServicesStore = create<ServicesState>()(
           const service = state.services.find(s => s.id === serviceId)
           if (service) {
             // Sanitizar datos antes de enviar - asegurar valores válidos
-            const baseFields: any = {
-                  pos_x: Math.round(service.pos_x || 0),
-                  pos_y: Math.round(service.pos_y || 0)
-                }
+            const baseFields: ServiceBaseFields = {
+              pos_x: Math.round(service.pos_x || 0),
+              pos_y: Math.round(service.pos_y || 0)
+            }
 
             // Campos requeridos/importantes - siempre incluir si tienen valores válidos
             const name = service.name?.trim()
@@ -310,8 +325,8 @@ export const useServicesStore = create<ServicesState>()(
 
             if (name && name.length >= 2) baseFields.name = name
             if (type && type.length >= 2) baseFields.type = type
-            if (['active', 'inactive'].includes(status)) baseFields.status = status
-            if (['production', 'development'].includes(environment)) baseFields.environment = environment
+            if (status && ['active', 'inactive'].includes(status)) baseFields.status = status
+            if (environment && ['production', 'development', 'staging'].includes(environment)) baseFields.environment = environment
 
             // Solo agregar campos opcionales si tienen valores
             if (service.description?.trim()) baseFields.description = service.description.trim()
@@ -321,24 +336,21 @@ export const useServicesStore = create<ServicesState>()(
             if (service.domain?.trim()) baseFields.domain = service.domain.trim()
             if (service.git_repo?.trim()) baseFields.git_repo = service.git_repo.trim()
             if (service.notes?.trim()) baseFields.notes = service.notes.trim()
-            if (service.health_metrics) baseFields.health_metrics = service.health_metrics
-            if (service.metadata) baseFields.metadata = service.metadata
 
             if (service.id < 0) {
               // Nuevo servicio
-              bulkData.services.push(baseFields)
+              bulkData.services.push(baseFields as Partial<Service>)
             } else {
               // Servicio existente
               bulkData.updated_services.push({
                 id: service.id,
                 ...baseFields
-              })
+              } as Partial<Service>)
             }
           }
         }
         
         // Preparar dependencias (nuevas y actualizadas)
-        // Solo incluir dependencias que no referencien servicios temporales
         for (const dependencyId of pendingChanges.dependencies) {
           const dependency = state.dependencies.find(d => d.id === dependencyId)
           if (dependency) {
@@ -355,7 +367,7 @@ export const useServicesStore = create<ServicesState>()(
               continue
             }
 
-            const baseFields: any = {
+            const baseFields: DependencyBaseFields = {
               source_id: dependency.source_id,
               target_id: dependency.target_id
             }
@@ -368,13 +380,13 @@ export const useServicesStore = create<ServicesState>()(
 
             if (dependency.id < 0) {
               // Nueva dependencia
-              bulkData.dependencies.push(baseFields)
+              bulkData.dependencies.push(baseFields as Partial<Dependency>)
             } else {
               // Dependencia existente
               bulkData.updated_dependencies.push({
                 id: dependency.id,
                 ...baseFields
-              })
+              } as Partial<Dependency>)
             }
           }
         }
@@ -457,14 +469,14 @@ export const useServicesStore = create<ServicesState>()(
           return {
             services: updatedServices,
             dependencies: updatedDependencies,
-          isDirty: false,
-          lastSaved: new Date(),
-          savingInProgress: false,
-          pendingChanges: {
-            services: new Set(),
-            dependencies: new Set(),
-            deletedServices: new Set(),
-            deletedDependencies: new Set(),
+            isDirty: false,
+            lastSaved: new Date(),
+            savingInProgress: false,
+            pendingChanges: {
+              services: new Set(),
+              dependencies: new Set(),
+              deletedServices: new Set(),
+              deletedDependencies: new Set(),
             }
           }
         })
@@ -479,7 +491,7 @@ export const useServicesStore = create<ServicesState>()(
             const realTargetId = dependency.target_id < 0 ? idMapping.get(dependency.target_id) : dependency.target_id
             
             if (realSourceId && realTargetId) {
-              const depData: any = {
+              const depData: DependencyBaseFields = {
                 source_id: realSourceId,
                 target_id: realTargetId
               }
@@ -491,7 +503,7 @@ export const useServicesStore = create<ServicesState>()(
               
               pendingDependencies.push({
                 originalDependency: dependency,
-                data: depData
+                data: depData as Partial<Dependency>
               })
             }
           }
@@ -520,11 +532,6 @@ export const useServicesStore = create<ServicesState>()(
         }
 
         console.log('✅ Bulk save exitoso a las', new Date().toLocaleTimeString())
-        
-        // Opcional: limpiar historial después de guardar exitosamente para que 
-        // undo no vuelva hasta el último guardado sino que sea por acción individual
-        // Comentado por ahora para mantener historial completo
-        // get().clearHistory()
         
         return true
         
@@ -671,122 +678,122 @@ export const useServicesStore = create<ServicesState>()(
       })
     },
     
-         saveToHistory: (action: string) => {
-       const state = get()
-       const { services, dependencies } = state
-       
-       // No guardar si no hay servicios (estado vacío inicial)
-       if (services.length === 0 && dependencies.length === 0) {
-         return
-       }
-       
-       // Crear una copia profunda del estado actual ANTES del cambio
-       const historyEntry = {
-         services: JSON.parse(JSON.stringify(services)),
-         dependencies: JSON.parse(JSON.stringify(dependencies)),
-         timestamp: new Date(),
-         action
-       }
-       
-       let newHistory = [...state.history]
-       let newIndex = state.currentHistoryIndex
-       
-       // Si estamos en el medio del historial (después de hacer undo), 
-       // eliminar entradas futuras
-       if (newIndex >= 0 && newIndex < newHistory.length - 1) {
-         newHistory = newHistory.slice(0, newIndex + 1)
-       }
-       
-       // Agregar nueva entrada
-       newHistory.push(historyEntry)
-       newIndex = newHistory.length - 1
-       
-       // Mantener tamaño máximo del historial
-       if (newHistory.length > state.maxHistorySize) {
-         newHistory.shift()
-         newIndex--
-       }
-       
-       set({
-         history: newHistory,
-         currentHistoryIndex: newIndex
-       })
-       
-       console.log('💾 Saved to history:', action, 'Index:', newIndex, 'Total:', newHistory.length)
-     },
+    saveToHistory: (action: string) => {
+      const state = get()
+      const { services, dependencies } = state
+      
+      // No guardar si no hay servicios (estado vacío inicial)
+      if (services.length === 0 && dependencies.length === 0) {
+        return
+      }
+      
+      // Crear una copia profunda del estado actual ANTES del cambio
+      const historyEntry: HistoryEntry = {
+        services: JSON.parse(JSON.stringify(services)),
+        dependencies: JSON.parse(JSON.stringify(dependencies)),
+        timestamp: new Date(),
+        action
+      }
+      
+      let newHistory = [...state.history]
+      let newIndex = state.currentHistoryIndex
+      
+      // Si estamos en el medio del historial (después de hacer undo), 
+      // eliminar entradas futuras
+      if (newIndex >= 0 && newIndex < newHistory.length - 1) {
+        newHistory = newHistory.slice(0, newIndex + 1)
+      }
+      
+      // Agregar nueva entrada
+      newHistory.push(historyEntry)
+      newIndex = newHistory.length - 1
+      
+      // Mantener tamaño máximo del historial
+      if (newHistory.length > state.maxHistorySize) {
+        newHistory.shift()
+        newIndex--
+      }
+      
+      set({
+        history: newHistory,
+        currentHistoryIndex: newIndex
+      })
+      
+      console.log('💾 Saved to history:', action, 'Index:', newIndex, 'Total:', newHistory.length)
+    },
     
-         undo: () => {
-       const state = get()
-       
-       // Verificar si hay entradas en el historial para hacer undo
-       if (state.history.length === 0 || state.currentHistoryIndex < 0) {
-         return false
-       }
-       
-       // Obtener la entrada del historial a restaurar
-       const historyEntry = state.history[state.currentHistoryIndex]
-       
-       if (!historyEntry) return false
-       
-       // Decrementar el índice DESPUÉS de obtener la entrada
-       const newIndex = state.currentHistoryIndex - 1
-       
-       set({
-         services: JSON.parse(JSON.stringify(historyEntry.services)),
-         dependencies: JSON.parse(JSON.stringify(historyEntry.dependencies)),
-         isDirty: true,
-         currentHistoryIndex: newIndex,
-         pendingChanges: {
-           services: new Set(),
-           dependencies: new Set(),
-           deletedServices: new Set(),
-           deletedDependencies: new Set(),
-         }
-       })
-       
-       console.log('🔙 Undo:', historyEntry.action)
-       return true
-     },
+    undo: () => {
+      const state = get()
+      
+      // Verificar si hay entradas en el historial para hacer undo
+      if (state.history.length === 0 || state.currentHistoryIndex < 0) {
+        return false
+      }
+      
+      // Obtener la entrada del historial a restaurar
+      const historyEntry = state.history[state.currentHistoryIndex]
+      
+      if (!historyEntry) return false
+      
+      // Decrementar el índice DESPUÉS de obtener la entrada
+      const newIndex = state.currentHistoryIndex - 1
+      
+      set({
+        services: JSON.parse(JSON.stringify(historyEntry.services)),
+        dependencies: JSON.parse(JSON.stringify(historyEntry.dependencies)),
+        isDirty: true,
+        currentHistoryIndex: newIndex,
+        pendingChanges: {
+          services: new Set(),
+          dependencies: new Set(),
+          deletedServices: new Set(),
+          deletedDependencies: new Set(),
+        }
+      })
+      
+      console.log('🔙 Undo:', historyEntry.action)
+      return true
+    },
     
-         redo: () => {
-       const state = get()
-       
-       // Verificar si podemos hacer redo (hay entradas futuras en el historial)
-       const nextIndex = state.currentHistoryIndex + 2 // +2 porque queremos el estado después del actual
-       if (nextIndex >= state.history.length) {
-         return false
-       }
-       
-       const historyEntry = state.history[nextIndex]
-       
-       if (!historyEntry) return false
-       
-       set({
-         services: JSON.parse(JSON.stringify(historyEntry.services)),
-         dependencies: JSON.parse(JSON.stringify(historyEntry.dependencies)),
-         isDirty: true,
-         currentHistoryIndex: nextIndex,
-         pendingChanges: {
-           services: new Set(),
-           dependencies: new Set(),
-           deletedServices: new Set(),
-           deletedDependencies: new Set(),
-         }
-       })
-       
-       console.log('🔄 Redo:', historyEntry.action)
-       return true
-     },
+    redo: () => {
+      const state = get()
+      
+      // Verificar si podemos hacer redo (hay entradas futuras en el historial)
+      const nextIndex = state.currentHistoryIndex + 2 // +2 porque queremos el estado después del actual
+      if (nextIndex >= state.history.length) {
+        return false
+      }
+      
+      const historyEntry = state.history[nextIndex]
+      
+      if (!historyEntry) return false
+      
+      set({
+        services: JSON.parse(JSON.stringify(historyEntry.services)),
+        dependencies: JSON.parse(JSON.stringify(historyEntry.dependencies)),
+        isDirty: true,
+        currentHistoryIndex: nextIndex,
+        pendingChanges: {
+          services: new Set(),
+          dependencies: new Set(),
+          deletedServices: new Set(),
+          deletedDependencies: new Set(),
+        }
+      })
+      
+      console.log('🔄 Redo:', historyEntry.action)
+      return true
+    },
     
-         canUndo: () => {
-       const state = get()
-       return state.history.length > 0 && state.currentHistoryIndex >= 0
-     },
+    canUndo: () => {
+      const state = get()
+      return state.history.length > 0 && state.currentHistoryIndex >= 0
+    },
      
-     canRedo: () => {
-       const state = get()
-       return state.currentHistoryIndex + 2 < state.history.length
-     },
+    canRedo: () => {
+      const state = get()
+      return state.currentHistoryIndex + 2 < state.history.length
+    },
     
     clearHistory: () => {
       set({

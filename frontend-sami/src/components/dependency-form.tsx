@@ -2,19 +2,52 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowRight, Trash2, Loader2 } from "lucide-react"
+import type { Service, Dependency } from "@/lib/services-api"
+import type { DependencyData } from "@/types"
+
+// Define connection types and their protocols
+const connectionTypes = {
+  "HTTP": {
+    protocols: ["REST", "GraphQL", "SOAP"],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"]
+  },
+  "Database": {
+    protocols: ["PostgreSQL", "MySQL", "MongoDB", "Redis", "SQLite"],
+    methods: ["SELECT", "INSERT", "UPDATE", "DELETE", "UPSERT"]
+  },
+  "Message Queue": {
+    protocols: ["Kafka", "RabbitMQ", "Redis Pub/Sub", "Amazon SQS", "Apache Pulsar"],
+    methods: ["PUBLISH", "SUBSCRIBE", "SEND", "RECEIVE", "CONSUME"]
+  },
+  "gRPC": {
+    protocols: ["gRPC", "gRPC-Web"],
+    methods: ["UNARY", "SERVER_STREAMING", "CLIENT_STREAMING", "BIDIRECTIONAL"]
+  },
+  "WebSocket": {
+    protocols: ["WebSocket", "Socket.IO", "Server-Sent Events"],
+    methods: ["CONNECT", "MESSAGE", "PING", "CLOSE", "BROADCAST"]
+  },
+  "File System": {
+    protocols: ["NFS", "SMB", "FTP", "SFTP", "S3"],
+    methods: ["READ", "WRITE", "DELETE", "COPY", "MOVE"]
+  },
+  "Cache": {
+    protocols: ["Redis", "Memcached", "Hazelcast"],
+    methods: ["GET", "SET", "DELETE", "EXPIRE", "FLUSH"]
+  }
+}
 
 interface DependencyFormProps {
-  dependency?: any
-  services: any[]
-  onSave: (dependency: any) => void
+  dependency?: Dependency
+  services: Service[]
+  onSave: (dependency: DependencyData) => void
   onCancel: () => void
   onDelete?: (dependencyId: number) => void
 }
@@ -31,45 +64,13 @@ export function DependencyForm({ dependency, services, onSave, onCancel, onDelet
 
   const [loading, setLoading] = useState(false)
 
-  // Define connection types and their protocols
-  const connectionTypes = {
-    "HTTP": {
-      protocols: ["REST", "GraphQL", "SOAP"],
-      methods: ["GET", "POST", "PUT", "DELETE", "PATCH"]
-    },
-    "Database": {
-      protocols: ["PostgreSQL", "MySQL", "MongoDB", "Redis", "SQLite"],
-      methods: ["SELECT", "INSERT", "UPDATE", "DELETE", "UPSERT"]
-    },
-    "Message Queue": {
-      protocols: ["Kafka", "RabbitMQ", "Redis Pub/Sub", "Amazon SQS", "Apache Pulsar"],
-      methods: ["PUBLISH", "SUBSCRIBE", "SEND", "RECEIVE", "CONSUME"]
-    },
-    "gRPC": {
-      protocols: ["gRPC", "gRPC-Web"],
-      methods: ["UNARY", "SERVER_STREAMING", "CLIENT_STREAMING", "BIDIRECTIONAL"]
-    },
-    "WebSocket": {
-      protocols: ["WebSocket", "Socket.IO", "Server-Sent Events"],
-      methods: ["CONNECT", "MESSAGE", "PING", "CLOSE", "BROADCAST"]
-    },
-    "File System": {
-      protocols: ["NFS", "SMB", "FTP", "SFTP", "S3"],
-      methods: ["READ", "WRITE", "DELETE", "COPY", "MOVE"]
-    },
-    "Cache": {
-      protocols: ["Redis", "Memcached", "Hazelcast"],
-      methods: ["GET", "SET", "DELETE", "EXPIRE", "FLUSH"]
-    }
-  }
-
   // Get available protocols for current type
-  const getAvailableProtocols = (type: string) => {
+  const getAvailableProtocols = useCallback((type: string) => {
     return connectionTypes[type as keyof typeof connectionTypes]?.protocols || []
-  }
+  }, [])
 
   // Get available methods for current protocol/type
-  const getAvailableMethods = (type: string, protocol: string) => {
+  const getAvailableMethods = useCallback((type: string, protocol: string) => {
     const typeConfig = connectionTypes[type as keyof typeof connectionTypes]
     if (!typeConfig) return []
     
@@ -79,7 +80,7 @@ export function DependencyForm({ dependency, services, onSave, onCancel, onDelet
     if (protocol === "Redis" && type === "Database") return ["GET", "SET", "HGET", "LPUSH", "SADD"]
     
     return typeConfig.methods
-  }
+  }, [])
 
   // Update protocol and method when type changes
   useEffect(() => {
@@ -93,7 +94,7 @@ export function DependencyForm({ dependency, services, onSave, onCancel, onDelet
         method: availableMethods.length > 0 ? availableMethods[0] : ""
       }))
     }
-  }, [formData.type])
+  }, [formData.type, formData.protocol, getAvailableProtocols, getAvailableMethods])
 
   // Update method when protocol changes
   useEffect(() => {
@@ -104,7 +105,7 @@ export function DependencyForm({ dependency, services, onSave, onCancel, onDelet
         method: availableMethods[0]
       }))
     }
-  }, [formData.protocol])
+  }, [formData.protocol, formData.type, formData.method, getAvailableMethods])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -121,7 +122,7 @@ export function DependencyForm({ dependency, services, onSave, onCancel, onDelet
   }
 
   const handleDelete = async () => {
-    if (!dependency || !onDelete) return
+    if (!dependency || !dependency.id || !onDelete) return
     
     if (window.confirm('Are you sure you want to delete this dependency? This action cannot be undone.')) {
       setLoading(true)

@@ -16,13 +16,23 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Separator } from '@/components/ui/separator';
+import Image from 'next/image';
 
 interface SidebarProps {
   isOpen?: boolean;
   onClose?: () => void;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
+}
+
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  status: string;
+  created_at: string;
+  last_login?: string;
 }
 
 const navigationItems = [
@@ -66,7 +76,7 @@ const navigationItems = [
 export default function Sidebar({ isOpen = true, onClose, isCollapsed = false, onToggleCollapse }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -121,9 +131,11 @@ export default function Sidebar({ isOpen = true, onClose, isCollapsed = false, o
         {/* Header */}
         <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
           <div className="flex items-center space-x-3">
-            <img 
+            <Image 
               src="/sami_logoxd.png" 
               alt="SAMI Logo"
+              width={32}
+              height={32}
               className="w-8 h-8 object-contain"
             />
             {!isCollapsed && (

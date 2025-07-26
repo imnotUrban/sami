@@ -61,14 +61,15 @@ export const useAdminUsers = (options: UseAdminUsersOptions = {}): UseAdminUsers
       const response = await adminApi.getAllUsers(filterParams);
       setUsers(response.users);
       setTotalUsers(response.total);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error loading users:', err);
-      if (err.status === 403) {
+      const error = err as Error & { status?: number };
+      if (error.status === 403) {
         setError('No tienes permisos para acceder a esta funcionalidad');
-      } else if (err.status === 401) {
+      } else if (error.status === 401) {
         setError('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
       } else {
-        setError(err.message || 'Error al cargar los usuarios');
+        setError(error.message || 'Error al cargar los usuarios');
       }
     } finally {
       setLoading(false);
@@ -79,7 +80,7 @@ export const useAdminUsers = (options: UseAdminUsersOptions = {}): UseAdminUsers
     try {
       const statsData = await adminApi.getUserStats();
       setStats(statsData);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error loading stats:', err);
       // No mostramos error para estadísticas, ya que es información adicional
     }
@@ -175,9 +176,10 @@ export const useUserStats = () => {
       setError(null);
       const statsData = await adminApi.getUserStats();
       setStats(statsData);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error loading user stats:', err);
-      setError(err.message || 'Error al cargar las estadísticas');
+      const error = err as Error;
+      setError(error.message || 'Error al cargar las estadísticas');
     } finally {
       setLoading(false);
     }

@@ -2,18 +2,20 @@
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { DependencyForm } from "./dependency-form"
+import type { Service, Dependency } from "@/lib/services-api"
+import type { DependencyData } from "@/types"
 
 interface DependencyDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  dependency?: any
-  services: any[]
-  onSave: (dependency: any) => Promise<void>
+  dependency?: Dependency
+  services: Service[]
+  onSave: (dependency: DependencyData) => Promise<void>
   onDelete?: (dependencyId: number) => Promise<void>
 }
 
 export function DependencyDialog({ open, onOpenChange, dependency, services, onSave, onDelete }: DependencyDialogProps) {
-  const handleSave = async (dependencyData: any) => {
+  const handleSave = async (dependencyData: DependencyData) => {
     await onSave(dependencyData)
     onOpenChange(false)
   }

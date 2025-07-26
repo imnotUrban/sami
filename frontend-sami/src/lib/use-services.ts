@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { servicesApi, dependenciesApi, type Service, type Dependency } from "@/lib/services-api"
 
@@ -11,16 +11,16 @@ export function useServices(projectId: number) {
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
-  const getAuthToken = (): string | null => {
+  const getAuthToken = useCallback((): string | null => {
     const token = localStorage.getItem('token')
     if (!token) {
       router.push('/login')
       return null
     }
     return token
-  }
+  }, [router])
 
-  const fetchData = async () => {
+  const refetch = useCallback(async () => {
     const token = getAuthToken()
     if (!token) return
 
@@ -49,13 +49,13 @@ export function useServices(projectId: number) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [projectId, router, getAuthToken])
 
   useEffect(() => {
     if (projectId) {
-      fetchData()
+      refetch()
     }
-  }, [projectId])
+  }, [projectId, refetch])
 
   const createService = async (service: Partial<Service>) => {
     const token = getAuthToken()
@@ -151,7 +151,7 @@ export function useServices(projectId: number) {
     dependencies,
     loading,
     error,
-    refetch: fetchData,
+    refetch,
     createService,
     updateService,
     deleteService,

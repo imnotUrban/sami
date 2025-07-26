@@ -285,7 +285,7 @@ export const useServicesStore = create<ServicesState>()(
           const service = state.services.find(s => s.id === serviceId)
           if (service) {
             // Sanitizar datos antes de enviar - asegurar valores válidos
-            const baseFields: any = {
+            const baseFields: Partial<Service> = {
                   pos_x: Math.round(service.pos_x || 0),
                   pos_y: Math.round(service.pos_y || 0)
                 }
@@ -343,7 +343,7 @@ export const useServicesStore = create<ServicesState>()(
               continue
             }
 
-            const baseFields: any = {
+            const baseFields: Partial<Dependency> = {
               source_id: dependency.source_id,
               target_id: dependency.target_id
             }
@@ -467,7 +467,7 @@ export const useServicesStore = create<ServicesState>()(
             const realTargetId = dependency.target_id < 0 ? idMapping.get(dependency.target_id) : dependency.target_id
             
             if (realSourceId && realTargetId) {
-              const depData: any = {
+              const depData: Partial<Dependency> = {
                 source_id: realSourceId,
                 target_id: realTargetId
               }

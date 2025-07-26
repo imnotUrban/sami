@@ -10,10 +10,11 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Trash2, Loader2 } from "lucide-react"
+import type { Service, ServiceData } from "@/types"
 
 interface ServiceFormProps {
-  service?: any
-  onSave: (service: any) => void
+  service?: Service | null
+  onSave: (service: ServiceData) => void
   onCancel: () => void
   onDelete?: (serviceId: number) => void
 }
@@ -45,7 +46,7 @@ export function ServiceForm({ service, onSave, onCancel, onDelete }: ServiceForm
   }
 
   const handleDelete = async () => {
-    if (!service || !onDelete) return
+    if (!service || !service.id || !onDelete) return
     
     if (window.confirm('Are you sure you want to delete this service? This action cannot be undone.')) {
       setLoading(true)

@@ -1,6 +1,24 @@
 // API functions for services and dependencies
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
 
+export interface HealthMetrics {
+  status?: 'healthy' | 'degraded' | 'unhealthy'
+  uptime?: number
+  responseTime?: number
+  lastChecked?: string
+  errorCount?: number
+  [key: string]: unknown
+}
+
+export interface ServiceMetadata {
+  tags?: string[]
+  team?: string
+  owner?: string
+  documentation?: string
+  config?: Record<string, unknown>
+  [key: string]: unknown
+}
+
 export interface Service {
   id: number
   project_id: number
@@ -14,8 +32,8 @@ export interface Service {
   deploy_url?: string
   domain?: string
   git_repo?: string
-  health_metrics?: any
-  metadata?: any
+  health_metrics?: HealthMetrics
+  metadata?: ServiceMetadata
   pos_x?: number
   pos_y?: number
   notes?: string
@@ -76,11 +94,9 @@ const handleResponse = async (response: Response) => {
     }
     
     let errorMessage = 'An error occurred'
-    let errorDetails = null
     try {
       const errorData = await response.json()
       errorMessage = errorData.error || errorData.message || errorMessage
-      errorDetails = errorData.details || errorData
       
       // Log detallado del error del backend
       console.error('🚨 Backend Error:', {

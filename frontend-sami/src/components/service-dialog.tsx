@@ -3,18 +3,18 @@
 import type React from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { ServiceForm } from "@/components/service-form"
-import { type Service } from "@/lib/services-api"
+import type { Service, ServiceData } from "@/types"
 
 interface ServiceDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   service?: Service | null
-  onSave: (serviceData: any) => Promise<void>
+  onSave: (serviceData: ServiceData) => Promise<void>
   onDelete?: (serviceId: number) => Promise<void>
 }
 
 export function ServiceDialog({ open, onOpenChange, service, onSave, onDelete }: ServiceDialogProps) {
-  const handleSave = async (serviceData: any) => {
+  const handleSave = async (serviceData: ServiceData) => {
     await onSave(serviceData)
     onOpenChange(false)
   }

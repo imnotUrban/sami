@@ -53,7 +53,8 @@ export default function RegisterPage() {
         const errorData = await response.json();
         setError(errorData.error || 'Registration failed');
       }
-    } catch (_) {
+    } catch (error) {
+      console.error('Registration error:', error);
       setError('Connection error. Please verify the server is running.');
     } finally {
       setIsLoading(false);
