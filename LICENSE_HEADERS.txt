@@ -1,0 +1,209 @@
+# License Headers for SAMI v2 Project Files
+
+## Go Files (*.go)
+```go
+/*
+ * SAMI v2 - System Architecture Mapping Interface
+ * Copyright (c) 2024 imnotUrban
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+```
+
+## TypeScript/JavaScript Files (*.ts, *.tsx, *.js, *.jsx)
+```typescript
+/**
+ * SAMI v2 - System Architecture Mapping Interface
+ * Copyright (c) 2024 imnotUrban
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+```
+
+## CSS Files (*.css)
+```css
+/*
+ * SAMI v2 - System Architecture Mapping Interface
+ * Copyright (c) 2024 imnotUrban
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+```
+
+## SQL Files (*.sql)
+```sql
+-- SAMI v2 - System Architecture Mapping Interface
+-- Copyright (c) 2024 imnotUrban
+-- 
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 3 of the License, or
+-- (at your option) any later version.
+-- 
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+-- GNU General Public License for more details.
+-- 
+-- You should have received a copy of the GNU General Public License
+-- along with this program. If not, see <https://www.gnu.org/licenses/>.
+```
+
+## Shell Scripts (*.sh)
+```bash
+#!/bin/bash
+#
+# SAMI v2 - System Architecture Mapping Interface
+# Copyright (c) 2024 imnotUrban
+# 
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+```
+
+## Python Files (*.py) [if any]
+```python
+"""
+SAMI v2 - System Architecture Mapping Interface
+Copyright (c) 2024 imnotUrban
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+"""
+```
+
+## YAML Files (*.yml, *.yaml)
+```yaml
+# SAMI v2 - System Architecture Mapping Interface
+# Copyright (c) 2024 imnotUrban
+# 
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+```
+
+## Dockerfile
+```dockerfile
+# SAMI v2 - System Architecture Mapping Interface
+# Copyright (c) 2024 imnotUrban
+# 
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+```
+
+## HTML Files (*.html)
+```html
+<!--
+SAMI v2 - System Architecture Mapping Interface
+Copyright (c) 2024 imnotUrban
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+```
+
+## Usage Instructions
+
+### Automated License Header Tool
+You can use tools like `licenseheaders` to automatically add these headers:
+
+```bash
+# Install licenseheaders
+pip install licenseheaders
+
+# Add headers to all source files
+licenseheaders -t GPL3 -c "imnotUrban" -y 2024 -n "SAMI v2" -u "https://www.gnu.org/licenses/" -d . -x node_modules -x .git -x dist -x build
+```
+
+### Manual Addition
+For manual addition, copy the appropriate header for your file type and paste it at the beginning of each source file.
+
+### Exclusions
+Do not add license headers to:
+- Configuration files (package.json, tsconfig.json, etc.)
+- Generated files
+- Third-party dependencies
+- Binary files
+- Documentation files (README.md, docs/, etc.)
+- Test fixtures and mock data 

@@ -197,8 +197,18 @@ Este proyecto está licenciado bajo la **GPL-3.0 License** - ver el archivo [LIC
 
 ## 📊 Estadísticas del Proyecto
 
-![GitHub stars](https://img.shields.io/github/stars/imnotUrban/sami?style=social)
-![GitHub forks](https://img.shields.io/github/forks/imnotUrban/sami?style=social)
-![GitHub issues](https://img.shields.io/github/issues/imnotUrban/sami)
-![GitHub license](https://img.shields.io/github/license/imnotUrban/sami)
-![GitHub last commit](https://img.shields.io/github/last-commit/imnotUrban/sami) 
+[![GitHub stars](https://img.shields.io/github/stars/imnotUrban/sami?style=for-the-badge&logo=github)](https://github.com/imnotUrban/sami/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/imnotUrban/sami?style=for-the-badge&logo=github)](https://github.com/imnotUrban/sami/network)
+[![GitHub issues](https://img.shields.io/github/issues/imnotUrban/sami?style=for-the-badge&logo=github)](https://github.com/imnotUrban/sami/issues)
+[![GitHub license](https://img.shields.io/github/license/imnotUrban/sami?style=for-the-badge)](LICENSE)
+[![GitHub last commit](https://img.shields.io/github/last-commit/imnotUrban/sami?style=for-the-badge&logo=github)](https://github.com/imnotUrban/sami/commits/main)
+
+[![CI/CD Pipeline](https://img.shields.io/github/actions/workflow/status/imnotUrban/sami/ci.yml?branch=main&style=for-the-badge&logo=github-actions&label=CI%2FCD)](https://github.com/imnotUrban/sami/actions)
+[![Docker Pulls](https://img.shields.io/docker/pulls/imnoturban/sami-backend?style=for-the-badge&logo=docker)](https://hub.docker.com/r/imnoturban/sami-backend)
+[![Code Coverage](https://img.shields.io/codecov/c/github/imnotUrban/sami?style=for-the-badge&logo=codecov)](https://codecov.io/gh/imnotUrban/sami)
+[![Security Rating](https://img.shields.io/snyk/vulnerabilities/github/imnotUrban/sami?style=for-the-badge&logo=snyk)](https://snyk.io/test/github/imnotUrban/sami)
+
+[![Go Report Card](https://goreportcard.com/badge/github.com/imnotUrban/sami?style=for-the-badge)](https://goreportcard.com/report/github.com/imnotUrban/sami)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-14.0+-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/imnotUrban/sami?style=for-the-badge&logo=go)](https://golang.org/) 

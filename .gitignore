@@ -1,5 +1,327 @@
-.DS_Store
+# ===========================================
+# SAMI v2 - .gitignore
+# ===========================================
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# Environment variables
 .env
-node_modules
-.cursor
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.staging
+
+# Parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# Next.js build output
 .next
+out/
+
+# Nuxt.js build / generate output
+.nuxt
+dist/
+
+# Gatsby files
+.cache/
+public
+
+# Vuepress build output
+.vuepress/dist
+
+# Serverless directories
+.serverless/
+
+# FuseBox cache
+.fusebox/
+
+# DynamoDB Local files
+.dynamodb/
+
+# TernJS port file
+.tern-port
+
+# Stores VSCode versions used for testing VSCode extensions
+.vscode-test
+
+# yarn v2
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# ===========================================
+# Go specific
+# ===========================================
+
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Dependency directories (remove the comment below to include it)
+vendor/
+
+# Go workspace file
+go.work
+
+# Go module cache
+go.sum
+
+# Compiled binary
+backend/sami
+backend/sami.exe
+backend/tmp/
+
+# ===========================================
+# Database
+# ===========================================
+
+# PostgreSQL
+*.sql.backup
+*.dump
+
+# Database data directories
+data/
+postgres_data/
+redis_data/
+
+# ===========================================
+# Docker
+# ===========================================
+
+# Docker volumes
+volumes/
+
+# Docker override files
+docker-compose.override.yml
+docker-compose.*.yml
+!docker-compose.production.yml
+
+# ===========================================
+# IDE and Editors
+# ===========================================
+
+# VS Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# JetBrains IDEs
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# ===========================================
+# OS generated files
+# ===========================================
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+
+# ===========================================
+# Temporary files
+# ===========================================
+
+# Temporary directories
+tmp/
+temp/
+.tmp/
+
+# Backup files
+*.backup
+*.bak
+*.orig
+
+# ===========================================
+# Security
+# ===========================================
+
+# Private keys
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# Certificates
+ssl/
+certs/
+
+# ===========================================
+# Build outputs
+# ===========================================
+
+# Build directories
+build/
+dist/
+out/
+
+# Compiled assets
+*.min.js
+*.min.css
+
+# ===========================================
+# Application specific
+# ===========================================
+
+# Uploads
+uploads/
+files/
+media/
+
+# Backups
+backups/
+*.sql.gz
+*.tar.gz
+
+# Setup logs
+setup.log
+
+# Configuration backups
+.db_config
+
+# Generated scripts (will be created by setup)
+start-dev.sh
+start-prod.sh
+
+# ===========================================
+# Testing
+# ===========================================
+
+# Test coverage
+coverage/
+*.coverage
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# ===========================================
+# Documentation
+# ===========================================
+
+# Generated documentation
+docs/_build/
+docs/build/
+site/
+
+# ===========================================
+# Deployment
+# ===========================================
+
+# Kubernetes
+k8s/secrets/
+*.secret.yaml
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# ===========================================
+# Monitoring and Logs
+# ===========================================
+
+# Application logs
+*.log
+logs/
+log/
+
+# Monitoring data
+monitoring/
+metrics/
+traces/
