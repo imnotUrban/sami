@@ -2,200 +2,224 @@
 
 ![SAMI Logo](frontend-sami/public/Sami_full_logo.png)
 
-**SAMI** es una plataforma open source para visualizar, gestionar y documentar arquitecturas de sistemas de software de manera interactiva y colaborativa.
+**SAMI** is an open source platform to visualize, manage and document software system architectures in an interactive and collaborative way.
 
-## 🚀 Características Principales
+## 🚀 Quick Start with Docker
 
-### 📊 Visualización Interactiva
-- **Diagramas de flujo dinámicos** con React Flow
-- **Múltiples temas visuales** (Volcánico, Matrix, Eléctrico, Cósmico, etc.)
-- **Fondos personalizables** con efectos visuales avanzados
-- **Leyendas colapsables** para maximizar el espacio de trabajo
-- **Minimapa integrado** para navegación rápida
+### Prerequisites
+- Docker 20.0+
+- Docker Compose 2.0+
 
-### 🔧 Gestión de Servicios
-- **Creación y edición** de servicios con detalles completos
-- **Tipos de servicio** predefinidos (API, Database, Cache, Queue, etc.)
-- **Estados de servicio** (Active/Inactive) con indicadores visuales
-- **Metadatos extensibles** para cada servicio
-- **Operaciones avanzadas**: copiar, pegar, duplicar, deshacer/rehacer
+### One-Command Setup
 
-### 🔗 Gestión de Dependencias
-- **Conexiones visuales** entre servicios
-- **Múltiples protocolos** (HTTP/REST, gRPC, WebSocket, Database, etc.)
-- **Edición de conexiones** con click directo
-- **Tipos de dependencia** con colores distintivos
-- **Validación automática** de conexiones
+```bash
+# Clone repository
+git clone https://github.com/imnotUrban/sami.git
+cd sami
 
-### 💾 Persistencia y Colaboración
-- **Autoguardado inteligente** con indicadores de estado
-- **Historial de cambios** con undo/redo
-- **Comentarios por proyecto** y servicio
-- **Gestión de usuarios** con roles y permisos
-- **API REST completa** para integración
+# Start all services
+docker-compose up -d
 
-### 🎨 Experiencia de Usuario
-- **Interfaz moderna** con Tailwind CSS
-- **Componentes reutilizables** con shadcn/ui
-- **Responsive design** para todos los dispositivos
-- **Atajos de teclado** para mayor productividad
-- **Estados persistentes** en localStorage
+# Access the application
+open http://localhost:3000
+```
 
-## 🛠️ Stack Tecnológico
+**Default credentials:**
+- Username: `admin`
+- Password: `admin` (change immediately)
 
-### Frontend
-- **Next.js 14** - Framework React con App Router
-- **TypeScript** - Tipado estático
-- **React Flow** - Visualización de diagramas
-- **Tailwind CSS** - Estilos utilitarios
-- **shadcn/ui** - Componentes de UI
-- **Lucide React** - Iconografía
+### Manual Installation
 
-### Backend
-- **Go** - Lenguaje de programación
-- **Gin** - Framework web
-- **PostgreSQL** - Base de datos relacional
-- **JWT** - Autenticación
-- **CORS** - Configuración de seguridad
-
-## 📦 Instalación
-
-### Prerrequisitos
+#### Prerequisites
 - Node.js 18+ 
 - Go 1.21+
 - PostgreSQL 13+
 - Git
 
-### Configuración del Backend
+#### Backend Setup
 
 ```bash
-# Clonar el repositorio
+# Clone repository
 git clone https://github.com/imnotUrban/sami.git
 cd sami
 
-# Configurar la base de datos PostgreSQL
+# Configure PostgreSQL database
 createdb sami_db
 
-# Configurar variables de entorno
+# Configure environment variables
 cp backend/.env.example backend/.env
-# Editar backend/.env con tus configuraciones
+# Edit backend/.env with your configurations
 
-# Instalar dependencias y ejecutar
+# Install dependencies and run
 cd backend
 go mod tidy
 go run main.go
 ```
 
-### Configuración del Frontend
+#### Frontend Setup
 
 ```bash
-# Navegar al directorio del frontend
+# Navigate to frontend directory
 cd frontend-sami
 
-# Instalar dependencias
+# Install dependencies
 npm install
 
-# Configurar variables de entorno
+# Configure environment variables
 cp .env.local.example .env.local
-# Editar .env.local con la URL de tu backend
+# Edit .env.local with your backend URL
 
-# Ejecutar en modo desarrollo
+# Run in development mode
 npm run dev
 ```
 
-## 🚀 Uso
+## ✨ Key Features
 
-1. **Accede a la aplicación** en `http://localhost:3000`
-2. **Crea una cuenta** o inicia sesión
-3. **Crea un nuevo proyecto** desde el dashboard
-4. **Agrega servicios** usando el botón "Add Service"
-5. **Conecta servicios** arrastrando desde los puntos de conexión
-6. **Personaliza la vista** con diferentes fondos y temas
-7. **Colabora** agregando comentarios y compartiendo proyectos
+### 📊 Interactive Visualization
+- **Dynamic flow diagrams** with React Flow
+- **Multiple visual themes** (Volcanic, Matrix, Electric, Cosmic, etc.)
+- **Customizable backgrounds** with advanced visual effects
+- **Collapsible legends** to maximize workspace
+- **Integrated minimap** for quick navigation
 
-### Atajos de Teclado
-- `Ctrl + C` - Copiar servicio seleccionado
-- `Ctrl + V` - Pegar servicio copiado
-- `Ctrl + Z` - Deshacer última acción
-- `Ctrl + Shift + Z` - Rehacer acción
+### 🔧 Service Management
+- **Create and edit** services with complete details
+- **Predefined service types** (API, Database, Cache, Queue, etc.)
+- **Service states** (Active/Inactive) with visual indicators
+- **Extensible metadata** for each service
+- **Advanced operations**: copy, paste, duplicate, undo/redo
 
-## 🤝 Contribuir
+### 🔗 Dependency Management
+- **Visual connections** between services
+- **Multiple protocols** (HTTP/REST, gRPC, WebSocket, Database, etc.)
+- **Direct connection editing** with click
+- **Dependency types** with distinctive colors
+- **Automatic connection validation**
 
-¡Las contribuciones son bienvenidas! Este es un proyecto open source y valoramos la participación de la comunidad.
+### 💾 Persistence and Collaboration
+- **Smart auto-save** with status indicators
+- **Change history** with undo/redo
+- **Comments per project** and service
+- **User management** with roles and permissions
+- **Complete REST API** for integration
 
-### Cómo Contribuir
+### 🎨 User Experience
+- **Modern interface** with Tailwind CSS
+- **Reusable components** with shadcn/ui
+- **Responsive design** for all devices
+- **Keyboard shortcuts** for improved productivity
+- **Persistent states** in localStorage
 
-1. **Fork el repositorio**
-2. **Crea una rama** para tu feature (`git checkout -b feature/AmazingFeature`)
-3. **Commit tus cambios** (`git commit -m 'Add some AmazingFeature'`)
-4. **Push a la rama** (`git push origin feature/AmazingFeature`)
-5. **Abre un Pull Request**
+## 🛠️ Technology Stack
 
-### Reportar Bugs
+### Frontend
+- **Next.js 14** - React framework with App Router
+- **TypeScript** - Static typing
+- **React Flow** - Diagram visualization
+- **Tailwind CSS** - Utility styles
+- **shadcn/ui** - UI components
+- **Lucide React** - Icons
 
-Si encuentras un bug, por favor [abre un issue](https://github.com/imnotUrban/sami/issues) con:
-- Descripción detallada del problema
-- Pasos para reproducir
-- Capturas de pantalla si es relevante
-- Información del entorno (OS, navegador, versiones)
+### Backend
+- **Go** - Programming language
+- **Gin** - Web framework
+- **PostgreSQL** - Relational database
+- **JWT** - Authentication
+- **CORS** - Security configuration
 
-### Solicitar Features
+## 🎯 Usage
 
-Para solicitar nuevas características:
-1. [Abre un issue](https://github.com/imnotUrban/sami/issues) con la etiqueta "enhancement"
-2. Describe la funcionalidad deseada
-3. Explica el caso de uso
-4. Proporciona mockups si es posible
+1. **Access the application** at `http://localhost:3000`
+2. **Create an account** or sign in
+3. **Create a new project** from the dashboard
+4. **Add services** using the "Add Service" button
+5. **Connect services** by dragging from connection points
+6. **Customize the view** with different backgrounds and themes
+7. **Collaborate** by adding comments and sharing projects
 
-## 📄 Licencia
+### Keyboard Shortcuts
+- `Ctrl + C` - Copy selected service
+- `Ctrl + V` - Paste copied service
+- `Ctrl + Z` - Undo last action
+- `Ctrl + Shift + Z` - Redo action
 
-Este proyecto está licenciado bajo la **GPL-3.0 License** - ver el archivo [LICENSE](LICENSE) para más detalles.
+## 🤝 Contributing
 
-### ¿Qué significa GPL-3.0?
+Contributions are welcome! This is an open source project and we value community participation.
 
-- ✅ **Uso comercial** - Puedes usar SAMI en proyectos comerciales
-- ✅ **Modificación** - Puedes modificar el código fuente
-- ✅ **Distribución** - Puedes distribuir el software
-- ✅ **Uso privado** - Puedes usar SAMI de forma privada
-- ⚠️ **Copyleft** - Las modificaciones deben mantener la misma licencia
-- ⚠️ **Divulgación del código** - Debes proporcionar el código fuente
+### How to Contribute
 
-## 👥 Equipo
+1. **Fork the repository**
+2. **Create a branch** for your feature (`git checkout -b feature/AmazingFeature`)
+3. **Commit your changes** (`git commit -m 'Add some AmazingFeature'`)
+4. **Push to the branch** (`git push origin feature/AmazingFeature`)
+5. **Open a Pull Request**
 
-- **[@imnotUrban](https://github.com/imnotUrban)** - Desarrollador Principal
+### Report Bugs
 
-## 🙏 Agradecimientos
+If you find a bug, please [open an issue](https://github.com/imnotUrban/sami/issues) with:
+- Detailed problem description
+- Steps to reproduce
+- Screenshots if relevant
+- Environment information (OS, browser, versions)
 
-- [React Flow](https://reactflow.dev/) - Por la excelente librería de diagramas
-- [shadcn/ui](https://ui.shadcn.com/) - Por los componentes de UI
-- [Tailwind CSS](https://tailwindcss.com/) - Por el sistema de estilos
-- [Lucide](https://lucide.dev/) - Por los iconos
-- La comunidad open source por su inspiración y apoyo
+### Request Features
 
-## 📞 Contacto
+To request new features:
+1. [Open an issue](https://github.com/imnotUrban/sami/issues) with "enhancement" label
+2. Describe the desired functionality
+3. Explain the use case
+4. Provide mockups if possible
+
+## 📄 License
+
+This project is licensed under the **GPL-3.0 License** - see the [LICENSE](LICENSE) file for details.
+
+### What does GPL-3.0 mean?
+
+- ✅ **Commercial use** - You can use SAMI in commercial projects
+- ✅ **Modification** - You can modify the source code
+- ✅ **Distribution** - You can distribute the software
+- ✅ **Private use** - You can use SAMI privately
+- ⚠️ **Copyleft** - Modifications must maintain the same license
+- ⚠️ **Source disclosure** - You must provide the source code
+
+## 👥 Team
+
+- **[@imnotUrban](https://github.com/imnotUrban)** - Lead Developer
+
+## 🙏 Acknowledgments
+
+- [React Flow](https://reactflow.dev/) - For the excellent diagram library
+- [shadcn/ui](https://ui.shadcn.com/) - For the UI components
+- [Tailwind CSS](https://tailwindcss.com/) - For the styling system
+- [Lucide](https://lucide.dev/) - For the icons
+- The open source community for inspiration and support
+
+## 📞 Contact
 
 - **GitHub**: [imnotUrban](https://github.com/imnotUrban)
 - **Issues**: [GitHub Issues](https://github.com/imnotUrban/sami/issues)
 
 ## 🗺️ Roadmap
 
-### v2.1 (Próximo)
-- [ ] Exportación a diferentes formatos (PNG, SVG, PDF)
-- [ ] Templates de arquitectura predefinidos
-- [ ] Integración con Git para versionado automático
-- [ ] Métricas y analytics de arquitectura
+### v1.1 (Next)
+- [ ] Export to different formats (PNG, SVG, PDF)
+- [ ] Predefined architecture templates
+- [ ] Git integration for automatic versioning
+- [ ] Architecture metrics and analytics
 
-### v2.2 (Futuro)
-- [ ] Colaboración en tiempo real
-- [ ] Integración con herramientas de CI/CD
-- [ ] API pública para integraciones
-- [ ] Modo offline con sincronización
+### v1.2 (Future)
+- [ ] Real-time collaboration
+- [ ] CI/CD tools integration
+- [ ] Public API for integrations
+- [ ] Offline mode with synchronization
 
 ---
 
-**⭐ Si SAMI te resulta útil, considera darle una estrella al repositorio para apoyar el proyecto!**
+**⭐ If SAMI is useful to you, consider giving the repository a star to support the project!**
 
-## 📊 Estadísticas del Proyecto
+## 📊 Project Statistics
 
 [![GitHub stars](https://img.shields.io/github/stars/imnotUrban/sami?style=for-the-badge&logo=github)](https://github.com/imnotUrban/sami/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/imnotUrban/sami?style=for-the-badge&logo=github)](https://github.com/imnotUrban/sami/network)
