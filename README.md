@@ -25,8 +25,10 @@ open http://localhost:3000
 ```
 
 **Default credentials:**
-- Username: `admin`
-- Password: `admin` (change immediately)
+
+- **Mail**: admin@sami.local
+- **Password**: admin123
+- **Role**: admin
 
 ### Manual Installation
 
