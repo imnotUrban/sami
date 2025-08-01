@@ -2,215 +2,215 @@
 
 ![SAMI Logo](public/Sami_full_logo.png)
 
-Este es el frontend de **SAMI**, una plataforma de código abierto para visualizar, gestionar y documentar arquitecturas de sistemas de software de manera interactiva y colaborativa. Construido con [Next.js](https://nextjs.org) y TypeScript.
+This is the frontend for **SAMI**, an open source platform to visualize, manage and document software system architectures in an interactive and collaborative way. Built with [Next.js](https://nextjs.org) and TypeScript.
 
-## 🚀 Inicio Rápido
+## 🚀 Quick Start
 
-### Prerrequisitos
+### Prerequisites
 - Node.js 18+ 
-- npm, yarn, pnpm o bun
-- Backend de SAMI ejecutándose (ver directorio `/backend`)
+- npm, yarn, pnpm or bun
+- SAMI backend running (see `/backend` directory)
 
-### Instalación y Desarrollo
+### Installation and Development
 
 ```bash
-# Instalar dependencias
+# Install dependencies
 npm install
-# o
+# or
 yarn install
-# o
+# or
 pnpm install
-# o
+# or
 bun install
 
-# Configurar variables de entorno
+# Configure environment variables
 cp .env.local.example .env.local
-# Editar .env.local con la URL de tu backend
+# Edit .env.local with your backend URL
 
-# Ejecutar servidor de desarrollo
+# Run development server
 npm run dev
-# o
+# or
 yarn dev
-# o
+# or
 pnpm dev
-# o
+# or
 bun dev
 ```
 
-Abre [http://localhost:3000](http://localhost:3000) en tu navegador para ver la aplicación.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the application.
 
-## ✨ Características del Frontend
+## ✨ Frontend Features
 
-### 📊 Visualización Interactiva
-- **Diagramas de flujo dinámicos** con React Flow
-- **Múltiples temas visuales** (Volcánico, Matrix, Eléctrico, Cósmico, etc.)
-- **Fondos personalizables** con efectos visuales avanzados
-- **Leyendas colapsables** para maximizar el espacio de trabajo
-- **Minimapa integrado** para navegación rápida
+### 📊 Interactive Visualization
+- **Dynamic flow diagrams** with React Flow
+- **Multiple visual themes** (Volcanic, Matrix, Electric, Cosmic, etc.)
+- **Customizable backgrounds** with advanced visual effects
+- **Collapsible legends** to maximize workspace
+- **Integrated minimap** for quick navigation
 
-### 🔧 Gestión de Servicios
-- **Crear y editar** servicios con detalles completos
-- **Tipos de servicio predefinidos** (API, Base de datos, Cache, Cola, etc.)
-- **Estados de servicio** (Activo/Inactivo) con indicadores visuales
-- **Operaciones avanzadas**: copiar, pegar, duplicar, deshacer/rehacer
+### 🔧 Service Management
+- **Create and edit** services with complete details
+- **Predefined service types** (API, Database, Cache, Queue, etc.)
+- **Service states** (Active/Inactive) with visual indicators
+- **Advanced operations**: copy, paste, duplicate, undo/redo
 
-### 🔗 Gestión de Dependencias
-- **Conexiones visuales** entre servicios
-- **Múltiples protocolos** (HTTP/REST, gRPC, WebSocket, Base de datos, etc.)
-- **Edición directa de conexiones** con clic
-- **Tipos de dependencia** con colores distintivos
+### 🔗 Dependency Management
+- **Visual connections** between services
+- **Multiple protocols** (HTTP/REST, gRPC, WebSocket, Database, etc.)
+- **Direct connection editing** with click
+- **Dependency types** with distinctive colors
 
-### 💾 Colaboración
-- **Auto-guardado inteligente** con indicadores de estado
-- **Historial de cambios** con deshacer/rehacer
-- **Comentarios por proyecto** y servicio
-- **Dashboard de administración** para gestión de usuarios
+### 💾 Collaboration
+- **Smart auto-save** with status indicators
+- **Change history** with undo/redo
+- **Comments per project** and service
+- **Admin dashboard** for user management
 
-## 🛠️ Stack Tecnológico
+## 🛠️ Technology Stack
 
-- **[Next.js 14](https://nextjs.org)** - Framework de React con App Router
-- **[TypeScript](https://www.typescriptlang.org/)** - Tipado estático
-- **[React Flow](https://reactflow.dev/)** - Visualización de diagramas
-- **[Tailwind CSS](https://tailwindcss.com/)** - Estilos utility-first
-- **[shadcn/ui](https://ui.shadcn.com/)** - Componentes de UI
-- **[Lucide React](https://lucide.dev/)** - Iconos
-- **[Zustand](https://github.com/pmndrs/zustand)** - Gestión de estado
-- **[React Hook Form](https://react-hook-form.com/)** - Gestión de formularios
-- **[Zod](https://zod.dev/)** - Validación de esquemas
+- **[Next.js 14](https://nextjs.org)** - React framework with App Router
+- **[TypeScript](https://www.typescriptlang.org/)** - Static typing
+- **[React Flow](https://reactflow.dev/)** - Diagram visualization
+- **[Tailwind CSS](https://tailwindcss.com/)** - Utility-first CSS
+- **[shadcn/ui](https://ui.shadcn.com/)** - UI components
+- **[Lucide React](https://lucide.dev/)** - Icons
+- **[Zustand](https://github.com/pmndrs/zustand)** - State management
+- **[React Hook Form](https://react-hook-form.com/)** - Form management
+- **[Zod](https://zod.dev/)** - Schema validation
 
-## 📁 Estructura del Proyecto
+## 📁 Project Structure
 
 ```
 src/
-├── app/                    # App Router de Next.js
-│   ├── dashboard/         # Panel de administración
-│   ├── login/             # Autenticación
-│   ├── project-slug/      # Visualización de proyectos
+├── app/                    # Next.js App Router
+│   ├── dashboard/         # Admin dashboard
+│   ├── login/             # Authentication
+│   ├── project-slug/      # Project visualization
 │   └── ...
-├── components/            # Componentes reutilizables
-│   ├── ui/               # Componentes base de shadcn/ui
+├── components/            # Reusable components
+│   ├── ui/               # shadcn/ui base components
 │   └── ...
-├── lib/                  # Utilidades y configuración
-│   ├── api.ts           # Cliente API
-│   ├── services-store.ts # Store de Zustand
-│   └── utils.ts         # Funciones auxiliares
-└── types/               # Tipos TypeScript
+├── lib/                  # Utilities and configuration
+│   ├── api.ts           # API client
+│   ├── services-store.ts # Zustand store
+│   └── utils.ts         # Helper functions
+└── types/               # TypeScript types
 ```
 
-## 🎯 Componentes Principales
+## 🎯 Main Components
 
-### Visualización de Servicios
-- `services-store.ts` - Store principal para gestión de servicios
-- `use-services-flow.ts` - Hook para React Flow
-- `enhanced-minimap.tsx` - Minimapa personalizado
-- `custom-edge.tsx` - Conexiones personalizadas
+### Service Visualization
+- `services-store.ts` - Main store for service management
+- `use-services-flow.ts` - React Flow hook
+- `enhanced-minimap.tsx` - Custom minimap
+- `custom-edge.tsx` - Custom connections
 
-### Formularios y Diálogos
-- `service-dialog.tsx` - Modal para crear/editar servicios
-- `dependency-dialog.tsx` - Modal para gestionar dependencias
-- `comment-form.tsx` - Formulario de comentarios
+### Forms and Dialogs
+- `service-dialog.tsx` - Modal for creating/editing services
+- `dependency-dialog.tsx` - Modal for managing dependencies
+- `comment-form.tsx` - Comment form
 
-### UI y Layout
-- `Layout.tsx` - Layout principal
-- `Header.tsx` - Barra de navegación
-- `Sidebar.tsx` - Barra lateral
-- Componentes UI en `/components/ui/`
+### UI and Layout
+- `Layout.tsx` - Main layout
+- `Header.tsx` - Navigation bar
+- `Sidebar.tsx` - Sidebar
+- UI components in `/components/ui/`
 
-## ⌨️ Atajos de Teclado
+## ⌨️ Keyboard Shortcuts
 
-- `Ctrl + C` - Copiar servicio seleccionado
-- `Ctrl + V` - Pegar servicio copiado
-- `Ctrl + Z` - Deshacer última acción
-- `Ctrl + Shift + Z` - Rehacer acción
+- `Ctrl + C` - Copy selected service
+- `Ctrl + V` - Paste copied service
+- `Ctrl + Z` - Undo last action
+- `Ctrl + Shift + Z` - Redo action
 
-## 🔧 Scripts Disponibles
+## 🔧 Available Scripts
 
 ```bash
-# Desarrollo con Turbopack (más rápido)
+# Development with Turbopack (faster)
 npm run dev
 
-# Compilar para producción
+# Build for production
 npm run build
 
-# Ejecutar versión de producción
+# Run production build
 npm run start
 
-# Verificar código con ESLint
+# Lint code with ESLint
 npm run lint
 ```
 
-## 🌐 Variables de Entorno
+## 🌐 Environment Variables
 
-Crea un archivo `.env.local` basado en `.env.local.example`:
+Create a `.env.local` file based on `.env.local.example`:
 
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:8080/api
 ```
 
-## 🤝 Desarrollo
+## 🤝 Development
 
-### Agregar Nuevos Componentes
+### Adding New Components
 
-El proyecto usa shadcn/ui. Para agregar nuevos componentes:
+The project uses shadcn/ui. To add new components:
 
 ```bash
 npx shadcn-ui@latest add [component-name]
 ```
 
-### Estructura de Store
+### Store Structure
 
-El estado global se gestiona con Zustand en `services-store.ts`:
+Global state is managed with Zustand in `services-store.ts`:
 
 ```typescript
 interface ServicesStore {
   services: Service[]
   connections: Connection[]
-  // ... más estado
+  // ... more state
   addService: (service: Service) => void
   updateService: (id: string, updates: Partial<Service>) => void
-  // ... más acciones
+  // ... more actions
 }
 ```
 
 ### API Integration
 
-Todas las llamadas a la API están centralizadas en `lib/api.ts` y `lib/services-api.ts`.
+All API calls are centralized in `lib/api.ts` and `lib/services-api.ts`.
 
 ## 📱 Responsive Design
 
-La aplicación está optimizada para:
-- **Desktop** - Experiencia completa con todos los paneles
-- **Tablet** - Layout adaptativo con navegación colapsable
-- **Mobile** - Interface simplificada manteniendo funcionalidad core
+The application is optimized for:
+- **Desktop** - Full experience with all panels
+- **Tablet** - Adaptive layout with collapsible navigation
+- **Mobile** - Simplified interface maintaining core functionality
 
-## 🎨 Temas y Estilos
+## 🎨 Themes and Styling
 
-SAMI incluye múltiples temas visuales:
-- Volcánico (rojo/naranja)
-- Matrix (verde)
-- Eléctrico (azul)
-- Cósmico (púrpura)
-- Y más...
+SAMI includes multiple visual themes:
+- Volcanic (red/orange)
+- Matrix (green)
+- Electric (blue)
+- Cosmic (purple)
+- And more...
 
-Los temas se gestionan a través de CSS custom properties y Tailwind CSS.
+Themes are managed through CSS custom properties and Tailwind CSS.
 
-## 🔗 Enlaces Útiles
+## 🔗 Useful Links
 
-- [Documentación de Next.js](https://nextjs.org/docs) - Aprende sobre Next.js
-- [React Flow Docs](https://reactflow.dev/learn) - Documentación de React Flow
-- [shadcn/ui](https://ui.shadcn.com/) - Sistema de componentes
-- [Tailwind CSS](https://tailwindcss.com/docs) - Framework de CSS
+- [Next.js Documentation](https://nextjs.org/docs) - Learn about Next.js
+- [React Flow Docs](https://reactflow.dev/learn) - React Flow documentation
+- [shadcn/ui](https://ui.shadcn.com/) - Component system
+- [Tailwind CSS](https://tailwindcss.com/docs) - CSS framework
 
-## 🤝 Contribuir
+## 🤝 Contributing
 
-Para contribuir al desarrollo del frontend:
+To contribute to frontend development:
 
-1. **Fork** el repositorio
-2. **Crea una rama** para tu feature (`git checkout -b feature/AmazingFeature`)
-3. **Commitea** tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. **Push** a la rama (`git push origin feature/AmazingFeature`)
-5. **Abre un Pull Request**
+1. **Fork** the repository
+2. **Create a branch** for your feature (`git checkout -b feature/AmazingFeature`)
+3. **Commit** your changes (`git commit -m 'Add some AmazingFeature'`)
+4. **Push** to the branch (`git push origin feature/AmazingFeature`)
+5. **Open a Pull Request**
 
 ---
 
-**¿Necesitas ayuda?** Revisa la [documentación completa](../README.md) del proyecto o abre un [issue](https://github.com/imnotUrban/sami/issues) en GitHub.
+**Need help?** Check the [complete documentation](../README.md) of the project or open an [issue](https://github.com/imnotUrban/sami/issues) on GitHub.
