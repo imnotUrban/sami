@@ -7,6 +7,42 @@ import (
 	"gorm.io/gorm"
 )
 
+// Role represents the permission level or access type assigned to an entity,
+type Role string
+
+const (
+	UserRole  Role = "user"
+	AdminRole Role = "admin"
+)
+
+var validRoles = map[Role]bool{
+	UserRole:  true,
+	AdminRole: true,
+}
+
+func (r Role) IsValid() bool {
+	return validRoles[r]
+}
+
+// Status represents the current state of an entity, such as a user account.
+type Status string
+
+const (
+	StatusActive    Status = "active"
+	StatusInactive  Status = "inactive"
+	StatusSuspended Status = "suspended"
+)
+
+var validStatuses = map[Status]bool{
+	StatusActive:    true,
+	StatusInactive:  true,
+	StatusSuspended: true,
+}
+
+func (s Status) IsValid() bool {
+	return validStatuses[s]
+}
+
 // User represents the user structure in the database
 type User struct {
 	ID           uint       `json:"id" gorm:"primaryKey"`
@@ -14,8 +50,8 @@ type User struct {
 	Email        string     `json:"email" gorm:"unique;not null;size:255"`
 	PasswordHash string     `json:"-" gorm:"not null;column:password_hash"`
 	Phone        *string    `json:"phone" gorm:"size:20"`
-	Role         string     `json:"role" gorm:"default:user;size:50"`
-	Status       string     `json:"status" gorm:"default:active;size:20"`
+	Role         Role       `json:"role" gorm:"default:user;size:50"`
+	Status       Status     `json:"status" gorm:"default:active;size:20"`
 	CreatedAt    time.Time  `json:"created_at" gorm:"not null;default:now()"`
 	UpdatedAt    time.Time  `json:"updated_at" gorm:"not null;default:now()"`
 	LastLogin    *time.Time `json:"last_login"`
@@ -42,8 +78,8 @@ type UserResponse struct {
 	Name      string     `json:"full_name"`
 	Email     string     `json:"email"`
 	Phone     *string    `json:"phone"`
-	Role      string     `json:"role"`
-	Status    string     `json:"status"`
+	Role      Role       `json:"role"`
+	Status    Status     `json:"status"`
 	CreatedAt time.Time  `json:"created_at"`
 	UpdatedAt time.Time  `json:"updated_at"`
 	LastLogin *time.Time `json:"last_login"`
