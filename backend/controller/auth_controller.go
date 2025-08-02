@@ -54,8 +54,8 @@ func (ac *AuthController) Register(c *gin.Context) {
 	user := models.User{
 		Name:   req.Name,
 		Email:  req.Email,
-		Role:   "user",
-		Status: "active",
+		Role:   models.UserRole,
+		Status: models.StatusActive,
 	}
 
 	// Set hashed password
@@ -95,7 +95,7 @@ func (ac *AuthController) Login(c *gin.Context) {
 
 	// Find user by email
 	var user models.User
-	if err := ac.DB.Where("email = ? AND status = ?", req.Email, "active").First(&user).Error; err != nil {
+	if err := ac.DB.Where("email = ? AND status = ?", req.Email, models.StatusActive).First(&user).Error; err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"error": "Invalid credentials",
 		})
@@ -307,7 +307,7 @@ func (ac *AuthController) generateJWT(user *models.User) (string, error) {
 	claims := Claims{
 		UserID: user.ID,
 		Email:  user.Email,
-		Role:   user.Role,
+		Role:   string(user.Role),
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -372,7 +372,7 @@ func (ac *AuthController) AuthMiddleware() gin.HandlerFunc {
 
 		// Find user in database
 		var user models.User
-		if err := ac.DB.Where("id = ? AND status = ?", claims.UserID, "active").First(&user).Error; err != nil {
+		if err := ac.DB.Where("id = ? AND status = ?", claims.UserID, models.StatusActive).First(&user).Error; err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"error": "User not found or inactive",
 			})

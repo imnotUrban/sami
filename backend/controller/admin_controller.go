@@ -66,7 +66,7 @@ func (ac *AdminController) GetProjectHistory(c *gin.Context) {
 		// Check if user is a collaborator
 		var collaborator models.ProjectCollaborator
 		if err := ac.DB.Where("project_id = ? AND user_id = ? AND state = ?",
-			projectID, user.ID, "active").First(&collaborator).Error; err != nil {
+			projectID, user.ID, models.StatusActive).First(&collaborator).Error; err != nil {
 			c.JSON(http.StatusForbidden, gin.H{
 				"error": "Access denied",
 			})
@@ -236,7 +236,7 @@ func (ac *AdminController) GetUserStats(c *gin.Context) {
 	}
 
 	// Check if user is admin
-	if user.Role != "admin" {
+	if user.Role != models.AdminRole {
 		c.JSON(http.StatusForbidden, gin.H{
 			"error": "Admin access required",
 		})
@@ -248,7 +248,7 @@ func (ac *AdminController) GetUserStats(c *gin.Context) {
 	ac.DB.Model(&models.User{}).Where("deleted_at IS NULL").Count(&totalUsers)
 
 	var activeUsers int64
-	ac.DB.Model(&models.User{}).Where("status = ? AND deleted_at IS NULL", "active").Count(&activeUsers)
+	ac.DB.Model(&models.User{}).Where("status = ? AND deleted_at IS NULL", models.StatusActive).Count(&activeUsers)
 
 	var adminUsers int64
 	ac.DB.Model(&models.User{}).Where("role = ? AND deleted_at IS NULL", "admin").Count(&adminUsers)
@@ -330,8 +330,8 @@ func (ac *AdminController) UpdateUser(c *gin.Context) {
 
 	// Parse request body
 	var updateData struct {
-		Status *string `json:"status"`
-		Role   *string `json:"role"`
+		Status *models.Status `json:"status"`
+		Role   *models.Role   `json:"role"`
 	}
 
 	if err := c.ShouldBindJSON(&updateData); err != nil {
@@ -343,14 +343,7 @@ func (ac *AdminController) UpdateUser(c *gin.Context) {
 
 	// Validate status if provided
 	if updateData.Status != nil {
-		validStatuses := []string{"active", "inactive", "suspended"}
-		valid := false
-		for _, status := range validStatuses {
-			if *updateData.Status == status {
-				valid = true
-				break
-			}
-		}
+		valid := updateData.Status.IsValid()
 		if !valid {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": "Invalid status. Must be one of: active, inactive, suspended",
@@ -362,14 +355,7 @@ func (ac *AdminController) UpdateUser(c *gin.Context) {
 
 	// Validate role if provided
 	if updateData.Role != nil {
-		validRoles := []string{"user", "admin"}
-		valid := false
-		for _, role := range validRoles {
-			if *updateData.Role == role {
-				valid = true
-				break
-			}
-		}
+		valid := updateData.Role.IsValid()
 		if !valid {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": "Invalid role. Must be one of: user, admin",
@@ -509,9 +495,9 @@ func (ac *AdminController) InviteUser(c *gin.Context) {
 
 	// Parse request body
 	var inviteData struct {
-		Name  string `json:"name" binding:"required"`
-		Email string `json:"email" binding:"required,email"`
-		Role  string `json:"role,omitempty"`
+		Name  string      `json:"name" binding:"required"`
+		Email string      `json:"email" binding:"required,email"`
+		Role  models.Role `json:"role,omitempty"`
 	}
 
 	if err := c.ShouldBindJSON(&inviteData); err != nil {
@@ -562,7 +548,7 @@ func (ac *AdminController) InviteUser(c *gin.Context) {
 		Name:   inviteData.Name,
 		Email:  inviteData.Email,
 		Role:   inviteData.Role,
-		Status: "active",
+		Status: models.StatusActive,
 	}
 
 	// Set hashed password
