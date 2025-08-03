@@ -1,1 +1,45 @@
 .env
+
+# Go build artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Go test binary, built with `go test -c`
+*.test
+
+# Go coverage files
+*.out
+*.prof
+
+# Go workspace file
+go.work
+
+# Binaries for programs and plugins
+main
+backend
+app
+
+# Vendor directory
+vendor/
+
+# Go modules download cache
+go.sum.backup
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
