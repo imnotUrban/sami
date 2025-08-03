@@ -2,7 +2,7 @@ name: Go Tests
 
 on:
   pull_request:
-    branches: [main]
+    branches: [ main ]
 
 jobs:
   test:
@@ -18,7 +18,9 @@ jobs:
           go-version: "1.23"
 
       - name: Install dependencies
+        working-directory: ./backend
         run: go mod download
 
       - name: Run tests
-        run: go test ./backend/... -v
+        working-directory: ./backend
+        run: go test ./... -v
